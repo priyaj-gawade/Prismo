@@ -84,7 +84,8 @@ The engine MUST dynamically select the optimal visual composition for the prompt
 ## Mandatory CSS Styling Rules
 1. `html, body` MUST have `margin: 0 !important; padding: 0 !important; width: 1080px !important; height: 1440px !important; overflow: hidden !important; background: transparent;`.
 2. `.poster-artboard` MUST have `width: 1080px; height: 1440px; margin: 0; padding: 64px 60px; position: relative; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;`.
-3. `.poster-content` MUST have `display: flex; flex-direction: column; height: 100%; gap: 28px; position: relative; z-index: 10;`.
-4. `.poster-grid` MUST have `flex: 1; display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px;` (or dynamic flex container appropriate for the archetype).
-5. Cards, diagram nodes, and grid blocks must have tight, uniform gaps (`gap: 20px;` to `24px;`) and generous internal padding (`24px` to `32px`).
-6. Every visible container MUST have a persistent `data-od-id="..."` attribute.
+3. `.poster-content` MUST have `display: flex; flex-direction: column; height: 100%; gap: 24px; position: relative; z-index: 10;`.
+4. `.poster-hero` MUST have `flex-shrink: 0;`.
+5. `.poster-grid` MUST have `flex: 1; display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px;`. All direct child cards MUST stretch (`height: 100%;`) to ensure zero bottom empty voids.
+6. Cards, diagram nodes, and grid blocks must have tight, uniform gaps (`gap: 20px;` to `24px;`) and generous internal padding (`24px` to `32px`).
+7. Every visible container MUST have a persistent `data-od-id="..."` attribute.

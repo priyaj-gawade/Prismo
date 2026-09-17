@@ -129,9 +129,12 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 28px;
+  gap: 24px;
   position: relative;
   z-index: 10;
+}
+.poster-hero {
+  flex-shrink: 0;
 }
 .poster-grid {
   flex: 1;
@@ -139,7 +142,10 @@ html, body {
   grid-template-columns: repeat(12, 1fr);
   gap: 20px;
 }
-/* Individual cards, pipeline containers, or bento blocks should have tight uniform gap (20px) and generous internal padding (24px to 32px) */
+.poster-grid > * {
+  height: 100%;
+}
+/* Individual cards, pipeline containers, or bento blocks should have tight uniform gap (20px), stretch to fill height, and have generous internal padding (24px to 32px) */
 
 Ensure you output BOTH:
 1. \`\`\`html:index.html\`\`\`
@@ -409,14 +415,15 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
 
   /**
    * Deterministically removes AI-slop header pills, edition numbers, EST dates,
-   * verification seals, and robotic footer specs from generated poster HTML.
+   * verification seals, faux top navigation bars, and robotic footer specs from generated poster HTML.
    * Preserves intentional editorial/directional footers (.editorial-footer, .telemetry-footer).
    */
   private sanitizePosterHtml(html: string): string {
     let clean = html;
 
-    // 1. Remove old AI-slop header (fake edition, date, pills)
-    clean = clean.replace(/<(?:header|div)\s+class="[^"]*\bposter-header\b[^"]*"[^>]*>[\s\S]*?<\/(?:header|div)>/gi, '');
+    // 1. Remove top navigation bars and editorial topbars
+    clean = clean.replace(/<nav\b[^>]*>[\s\S]*?<\/nav>/gi, '');
+    clean = clean.replace(/<(?:header|div)\s+class="[^"]*\b(?:poster-header|editorial-topbar|editorial-nav|topbar)\b[^"]*"[^>]*>[\s\S]*?<\/(?:header|div)>/gi, '');
 
     // 2. Remove old AI-slop footer classes (spec telemetry, fake URLs, archival edition seals)
     clean = clean.replace(/<(?:footer|div)\s+class="[^"]*\bposter-footer\b[^"]*"[^>]*>[\s\S]*?<\/(?:footer|div)>/gi, '');
@@ -427,7 +434,10 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
     clean = clean.replace(/<div\s+class="[^"]*\bheader-meta\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
     clean = clean.replace(/<span\s+class="[^"]*\bposter-badge\b[^"]*"[^>]*>[\s\S]*?<\/span>/gi, '');
 
-    // 4. Remove fake divider lines at the top of content or bottom
+    // 4. Remove elements matching AI-slop text triggers
+    clean = clean.replace(/<[a-z0-9]+\b[^>]*>(?:\s*(?:SYS\.DOC|ARCHIVAL\s+EDITION|PROGRAMMING\s+EXCELLENCE|EST\.\s*\d{4}|FELINE\s+ARCHIVES|VERIFIED\s+TRUTHS|1080\s*[×x]\s*1440\s*ARTBOARD|ENGINE\s+LAB)[^<]*)<\/[a-z0-9]+>/gi, '');
+
+    // 5. Remove fake divider lines at the top of content or bottom
     clean = clean.replace(/<hr\s*\/?>/gi, '');
 
     return clean;
@@ -440,6 +450,8 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
     let clean = css;
     clean = clean.replace(/\.poster-header\s*\{[\s\S]*?\}/gi, '');
     clean = clean.replace(/\.poster-footer\s*\{[\s\S]*?\}/gi, '');
+    clean = clean.replace(/\.editorial-topbar\s*\{[\s\S]*?\}/gi, '');
+    clean = clean.replace(/\.editorial-nav\s*\{[\s\S]*?\}/gi, '');
     clean = clean.replace(/\.header-meta\s*\{[\s\S]*?\}/gi, '');
     clean = clean.replace(/\.badge-container\s*\{[\s\S]*?\}/gi, '');
     clean = clean.replace(/\.footer-(?:badge-seal|brand-info|specs)\s*\{[\s\S]*?\}/gi, '');

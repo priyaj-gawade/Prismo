@@ -79,7 +79,9 @@ Adapt the layout structure dynamically according to the topic:
 
 ANTI-AI-SLOP & PALETTE DISCIPLINE:
 - NEVER default to generic purple/violet backgrounds or AI-cliché purple-blue gradients.
-- NO FAKE METADATA: Do NOT generate fake edition pills (e.g. "ARCHIVAL EDITION N°"), fake founding dates ("EST. 1974"), or footer specs ("1080x1440 ARTBOARD").
+- NO TOPBAR CHROME & NO FAKE METADATA: Do NOT generate top navigation bars (<nav>), faux creator handles (@handle), slide numbers, fake edition pills (e.g. "ARCHIVAL EDITION N°", "SYS.DOC // 02"), or fake founding dates ("EST. 1974"). Start cleanly and directly with the hero headline.
+- NO FOOTER SPEC BARS: Do NOT generate fake spec bars (e.g. "1080x1440 ARTBOARD", fake URLs like "RETROCATS.ORG"). Only generate an anchored footer when the prompt explicitly calls for an editorial status or directional swipe action.
+- 2-TIER CLEAN ARTBOARD ARCHITECTURE: A clean poster consists of Tier 1: .poster-hero (Title + Subtitle) and Tier 2: .poster-grid (stretches with flex: 1 to fill the remaining height with tight uniform gaps and zero bottom empty voids).
 - Use curated, brand-appropriate palettes: crisp white with electric royal blue (#2563EB), slate with cyan/emerald, high-contrast dark slate (#050811) with neon cyan (#00F0FF) & acid lime (#C8FF00), or bespoke brand accents.
 
 PROFESSIONAL ICONS (NO EMOJIS):
@@ -116,7 +118,8 @@ PROFESSIONAL ICONS (NO EMOJIS):
       'Never omit data-od-id attributes; they provide stable element identity for surgical section updates.',
       'ANTI-PURPLE RULE: Never use generic purple or violet backgrounds/gradients unless explicitly requested by the user.',
       'NO RAW EMOJIS: Never use emojis for UI icons, features, or buttons. Use Lucide icons (<i data-lucide="..."></i>) or SVG vector icons exclusively.',
-      'NO HEADER/FOOTER AI SLOP: Never generate top status pills (e.g. "ARCHIVAL EDITION", "SYS.DOC") or bottom spec telemetry bars (e.g. "1080x1440 ARTBOARD", fake URLs). Start directly with the headline hero.',
+      'CANONICAL 2-TIER ARTBOARD: The poster content starts directly with <header class="poster-hero"> and flows into <section class="poster-grid"> with flex: 1. Child cards stretch naturally to fill the 1440px canvas without needing filler footers or leaving black holes.',
+      'NO TOPBAR CHROME: Never generate <nav> bars, faux creator handles (@handle), or top status pills (e.g. "ARCHIVAL EDITION", "SYS.DOC") unless explicitly requested.',
       'TYPOGRAPHY READABILITY RULE: In 3:4 posters and diagrams, NEVER use font sizes below 16px. Ensure all diagram node labels, steps, cards, and text are crisp and immediately readable on small devices (diagram titles >= 18px, headline >= 64px, subheading >= 24px).',
       'Mobile-first responsive styling: default layout for mobile, min-width media queries for tablet (768px) and desktop (1024px).',
       'No heavy frameworks or build tools; pure browser-native standard HTML5, CSS3, and ES6 JavaScript.',

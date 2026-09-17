@@ -159,18 +159,13 @@ export class PosterTemplateRegistry {
     }
 
     if (best) {
+      const isCleanRequested = /no\s+(header|footer)|without\s+(header|footer)|clean\s+(poster|layout)/i.test(prompt);
       lines.push(`### Recommended Archetype for this Request: \`${best.meta.id}\``);
-      lines.push(`To achieve maximum visual impact, follow this structure and styling pattern:`);
+      lines.push(`Follow this clean structural hierarchy (starts directly with .poster-hero; NO top navigation bar or faux handles):`);
       lines.push('```html');
-      // Provide a compact structural extract of the body
-      const bodyMatch = best.html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-      if (bodyMatch) {
-        const cleanSnippet = bodyMatch[1].trim().slice(0, 1800);
-        lines.push(cleanSnippet);
-        if (bodyMatch[1].trim().length > 1800) {
-          lines.push('  <!-- ... [balanced content & purposeful footer] -->');
-        }
-      }
+      
+      const cleanSnippet = this.extractStructuralSnippet(best.html, { isCleanRequested });
+      lines.push(cleanSnippet);
       lines.push('```');
       lines.push('');
       lines.push('**Key CSS Design Tokens to replicate:**');
@@ -183,6 +178,42 @@ export class PosterTemplateRegistry {
     }
 
     return lines.join('\n');
+  }
+
+  /**
+   * Cleans template HTML for few-shot prompting: strips <nav> bars, creator handles,
+   * slide badges, and unwanted top chrome so the LLM starts cleanly with .poster-hero.
+   */
+  private extractStructuralSnippet(html: string, options: { isCleanRequested: boolean }): string {
+    let clean = html;
+
+    // 1. Remove <nav> bars and editorial topbars
+    clean = clean.replace(/<nav\b[^>]*>[\s\S]*?<\/nav>/gi, '');
+    clean = clean.replace(/<div\s+class="[^"]*\b(?:editorial-topbar|editorial-nav|topbar)\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+
+    // 2. Remove standalone top tape badges or pills outside hero
+    clean = clean.replace(/<div\s+class="[^"]*\b(?:tape-badge|badge-container)\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+
+    // 3. If clean mode requested, remove footer
+    if (options.isCleanRequested) {
+      clean = clean.replace(/<footer\b[^>]*>[\s\S]*?<\/footer>/gi, '');
+      clean = clean.replace(/<div\s+class="[^"]*\b(?:editorial-footer|telemetry-footer)\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+    }
+
+    // 4. Extract poster-content body
+    const bodyMatch = clean.match(/<div\s+class="poster-content"[^>]*>([\s\S]*?)<\/div>\s*<\/main>/i);
+    if (bodyMatch) {
+      const lines = bodyMatch[1].trim().split('\n').map((l) => l.trimEnd()).filter(Boolean);
+      return lines.slice(0, 45).join('\n') + (lines.length > 45 ? '\n      <!-- ... [additional grid cards & details] -->' : '');
+    }
+
+    // Fallback: take inner body
+    const fallbackMatch = clean.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    if (fallbackMatch) {
+      return fallbackMatch[1].trim().slice(0, 1500);
+    }
+
+    return clean.slice(0, 1500);
   }
 
   /**
