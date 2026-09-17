@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D8.7 Standalone Social Poster Studio</title>
+  <!-- Aura Design Tokens from web-components -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #09090b;
+      --bg-card: #121215;
+      --bg-card-hover: #18181c;
+      --bg-surface: #1e1e24;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(255, 255, 255, 0.16);
+      --border-glow: rgba(99, 102, 241, 0.3);
+      --accent-primary: #6366f1;
+      --accent-secondary: #8b5cf6;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      --accent-glow: 0 0 20px rgba(99, 102, 241, 0.25);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    .ambient-glow {
+      position: fixed;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 300px;
+      background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.05) 50%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    header {
+      position: relative;
+      z-index: 2;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; font-size: 1.1rem; }
+    .badge {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .status-badge {
+      font-size: 0.8rem;
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; }
+    main {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 440px;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 1.25rem;
+      gap: 1.25rem;
+    }
+    .preview-pane {
+      flex: 1;
+      background: #020617;
+      display: flex;
+      flex-direction: column;
+    }
+    .preview-header {
+      padding: 0.6rem 1.2rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+    .preview-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #18181c 0%, #09090b 100%);
+      padding: 16px;
+      position: relative;
+    }
+    .artboard-scaler {
+      width: 1080px;
+      height: 1440px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+      transform-origin: center center;
+      transition: transform 0.1s ease-out;
+    }
+    iframe {
+      width: 1080px;
+      height: 1440px;
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 25px 70px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.12);
+      background: #07080A;
+    }
+    .section-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transition: border-color 0.2s;
+    }
+    .section-card:hover {
+      border-color: var(--border-highlight);
+    }
+    h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+      font-weight: 700;
+    }
+    label { font-size: 0.8rem; color: var(--text-secondary); }
+    input, select, textarea {
+      width: 100%;
+      background: var(--bg-main);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 0.6rem 0.8rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    button {
+      background: var(--accent-gradient);
+      color: #FFF;
+      border: none;
+      padding: 0.65rem 1rem;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    button:hover { opacity: 0.95; }
+    button:active { transform: scale(0.98); }
+    button.secondary {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+    }
+    button.secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-highlight);
+    }
+    .diag-box {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      background: var(--bg-main);
+      border: 1px solid var(--border-subtle);
+      padding: 0.6rem;
+      border-radius: var(--radius-sm);
+      max-height: 140px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+  <header>
+    <div class="brand">
+      <span>D8.7 Studio</span>
+      <span class="badge">Social Poster Engine (3:4)</span>
+    </div>
+    <div class="status-badge">
+      <span class="status-dot"></span>
+      <span id="pool-status-label">Gemini Pool Active (3 Keys)</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="sidebar">
+      <div class="section-card">
+        <h3>Project</h3>
+        <div>
+          <label>Active Project</label>
+          <select id="project-select">
+            <option value="">Loading projects...</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" id="new-project-name" placeholder="Poster Title">
+          <button id="create-project-btn" style="white-space: nowrap;">Create</button>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h3>Poster Prompt</h3>
+        <textarea id="prompt-input" placeholder="E.g. Modern quantum physics conference poster with deep navy + electric cyan palette, bento metrics, and bespoke SVG diagrams"></textarea>
+        <div style="display: flex; gap: 0.5rem;">
+          <button id="generate-btn" style="flex: 1;">⚡ Generate Poster</button>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h3>Surgical Refinement</h3>
+        <div>
+          <label>Target Element [data-od-id]</label>
+          <input type="text" id="target-element-id" placeholder="e.g. hero-card or bento-grid-1">
+        </div>
+        <textarea id="refine-input" placeholder="E.g. Change accent colors to emerald and enlarge key statistics"></textarea>
+        <button id="refine-btn" class="secondary">🎯 Refine Section</button>
+      </div>
+
+      <div class="section-card">
+        <h3>Export & Versioning</h3>
+        <div style="display: flex; gap: 0.5rem;">
+          <button id="export-png-btn" class="secondary" style="flex: 1;">📷 Export PNG (1080x1440)</button>
+          <button id="export-jpg-btn" class="secondary" style="flex: 1;">📷 Export JPEG</button>
+        </div>
+        <div id="export-status" style="font-size: 0.8rem; color: #a5b4fc;"></div>
+      </div>
+
+      <div class="section-card">
+        <h3>Diagnostics & Pool State</h3>
+        <div id="diagnostics-log" class="diag-box">Initialized D8.7 Standalone Engine.</div>
+      </div>
+    </div>
+
+    <div class="preview-pane">
+      <div class="preview-header">
+        <span id="preview-url-label">Live 3:4 Poster Artboard (1080 &times; 1440)</span>
+        <button id="reload-frame-btn" class="secondary" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;">Reload</button>
+      </div>
+      <div class="preview-container" id="preview-container">
+        <div class="artboard-scaler" id="artboard-scaler">
+          <iframe id="preview-frame" src="about:blank"></iframe>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const projectSelect = document.getElementById('project-select');
+    const promptInput = document.getElementById('prompt-input');
+    const generateBtn = document.getElementById('generate-btn');
+    const refineInput = document.getElementById('refine-input');
+    const targetElementId = document.getElementById('target-element-id');
+    const refineBtn = document.getElementById('refine-btn');
+    const previewFrame = document.getElementById('preview-frame');
+    const previewContainer = document.getElementById('preview-container');
+    const previewUrlLabel = document.getElementById('preview-url-label');
+    const exportPngBtn = document.getElementById('export-png-btn');
+    const exportJpgBtn = document.getElementById('export-jpg-btn');
+    const exportStatus = document.getElementById('export-status');
+    const diagnosticsLog = document.getElementById('diagnostics-log');
+    const reloadFrameBtn = document.getElementById('reload-frame-btn');
+
+    let loadedProjectsList = [];
+
+    function log(msg) {
+      const ts = new Date().toLocaleTimeString();
+      diagnosticsLog.textContent = `[${ts}] ${msg}\n` + diagnosticsLog.textContent;
+    }
+
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        const activeCount = data.accounts ? data.accounts.length : 0;
+        document.getElementById('pool-status-label').textContent = `Gemini Pool Active (${activeCount} Keys)`;
+      } catch (err) {
+        document.getElementById('pool-status-label').textContent = 'Engine Offline';
+      }
+    }
+
+    async function loadProjects() {
+      try {
+        const res = await fetch('/api/projects');
+        const projects = await res.json();
+        loadedProjectsList = projects;
+        projectSelect.innerHTML = '';
+        if (projects.length === 0) {
+          projectSelect.innerHTML = '<option value="">No projects available</option>';
+          return;
+        }
+        projects.forEach((p) => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = `${p.name} [v${p.version || 1}]`;
+          projectSelect.appendChild(opt);
+        });
+        selectProject(projects[0].id);
+      } catch (err) {
+        log('Failed to load projects: ' + err.message);
+      }
+    }
+
+    function selectProject(id) {
+      if (!id) return;
+      previewUrlLabel.textContent = `Live [3:4 Poster Artboard]: /projects/${id}/index.html`;
+      previewFrame.src = `/projects/${id}/index.html?t=${Date.now()}`;
+      rescalePreview();
+      log(`Selected project: ${id}`);
+    }
+
+    function rescalePreview() {
+      const scaler = document.getElementById('artboard-scaler');
+      if (!scaler) return;
+      const cw = previewContainer.clientWidth - 32;
+      const ch = previewContainer.clientHeight - 32;
+      if (cw > 0 && ch > 0) {
+        const scale = Math.min(cw / 1080, ch / 1440, 0.85);
+        scaler.style.transform = `scale(${scale})`;
+        scaler.style.width = '1080px';
+        scaler.style.height = '1440px';
+      }
+    }
+
+    window.addEventListener('resize', rescalePreview);
+    if (window.ResizeObserver) {
+      new ResizeObserver(rescalePreview).observe(previewContainer);
+    }
+
+    projectSelect.addEventListener('change', () => {
+      selectProject(projectSelect.value);
+    });
+
+    document.getElementById('create-project-btn').addEventListener('click', async () => {
+      const name = document.getElementById('new-project-name').value.trim();
+      if (!name) return alert('Enter poster project name');
+
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, target: 'poster' })
+      });
+      const data = await res.json();
+      log(`Created poster project: ${data.name} [${data.id}]`);
+      await loadProjects();
+      projectSelect.value = data.id;
+      selectProject(data.id);
+    });
+
+    generateBtn.addEventListener('click', async () => {
+      const projectId = projectSelect.value;
+      const prompt = promptInput.value.trim();
+      if (!projectId || !prompt) return alert('Select project and enter prompt');
+
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Generating Poster...';
+      log(`Starting poster generation for ${projectId}...`);
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId, prompt, conversationId: `conv_${Date.now()}` })
+        });
+        const data = await res.json();
+        log(`Poster generation complete: model=${data.diagnostics?.model}, account=${data.diagnostics?.accountId}`);
+        previewFrame.src = `/projects/${projectId}/index.html?t=${Date.now()}`;
+      } catch (err) {
+        log('Generation error: ' + err.message);
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = '⚡ Generate Poster';
+      }
+    });
+
+    refineBtn.addEventListener('click', async () => {
+      const projectId = projectSelect.value;
+      const instruction = refineInput.value.trim();
+      const targetId = targetElementId.value.trim();
+      if (!projectId || !instruction) return alert('Select project and enter refinement instruction');
+
+      refineBtn.disabled = true;
+      refineBtn.textContent = 'Refining...';
+      log(`Starting surgical refinement on [${targetId || 'global'}]...`);
+
+      try {
+        const res = await fetch('/api/refine', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId, instruction, targetElementId: targetId || undefined, conversationId: `conv_${Date.now()}` })
+        });
+        const data = await res.json();
+        log(`Refinement complete: model=${data.diagnostics?.model}, account=${data.diagnostics?.accountId}`);
+        previewFrame.src = `/projects/${projectId}/index.html?t=${Date.now()}`;
+      } catch (err) {
+        log('Refinement error: ' + err.message);
+      } finally {
+        refineBtn.disabled = false;
+        refineBtn.textContent = '🎯 Refine Section';
+      }
+    });
+
+    async function handleExport(format) {
+      const projectId = projectSelect.value;
+      if (!projectId) return alert('Select project');
+
+      exportStatus.textContent = `Exporting ${format.toUpperCase()} (1080x1440)...`;
+      try {
+        const payload = { projectId, format, width: 1080, height: 1440 };
+
+        const res = await fetch('/api/export', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        exportStatus.textContent = `Saved: ${data.filePath.split(/[\\\\/]/).pop()} (${data.width}x${data.height}, ${data.fileSize} bytes)`;
+        log(`Exported ${format.toUpperCase()} (${data.width}x${data.height}) to ${data.filePath}`);
+      } catch (err) {
+        exportStatus.textContent = 'Export failed';
+        log('Export error: ' + err.message);
+      }
+    }
+
+    exportPngBtn.addEventListener('click', () => handleExport('png'));
+    exportJpgBtn.addEventListener('click', () => handleExport('jpeg'));
+
+    reloadFrameBtn.addEventListener('click', () => {
+      const projectId = projectSelect.value;
+      if (projectId) {
+        previewFrame.src = `/projects/${projectId}/index.html?t=${Date.now()}`;
+      }
+    });
+
+    // SSE Live Reload connection
+    function connectSSE() {
+      const evtSource = new EventSource('/events');
+      evtSource.onmessage = (e) => {
+        if (e.data === 'reload') {
+          const projectId = projectSelect.value;
+          if (projectId) {
+            previewFrame.src = `/projects/${projectId}/index.html?t=${Date.now()}`;
+            log('Live reload triggered from filesystem change');
+          }
+        }
+      };
+      evtSource.onerror = () => {
+        evtSource.close();
+        setTimeout(connectSSE, 3000);
+      };
+    }
+
+    checkStatus();
+    loadProjects();
+    connectSSE();
+  </script>
+</body>
+</html>

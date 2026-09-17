@@ -1,0 +1,20 @@
+{
+  "name": "prismo",
+  "version": "1.0.0",
+  "description": "Prismo — High-Density 3:4 Social Poster & Visual Design Engine",
+  "type": "module",
+  "main": "core/engine.js",
+  "scripts": {
+    "build": "tsc",
+    "cli": "node --experimental-strip-types app/cli/index.ts",
+    "serve": "node --experimental-strip-types app/server/server.ts",
+    "start": "node --experimental-strip-types app/cli/index.ts",
+    "test": "node --experimental-strip-types tests/run-all.ts",
+    "test:deterministic": "node --experimental-strip-types tests/deterministic/run.ts",
+    "test:smoke": "node --experimental-strip-types tests/smoke/run.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "@types/node": "^22.10.2"
+  }
+}
