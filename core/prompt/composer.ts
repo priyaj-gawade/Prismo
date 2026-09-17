@@ -86,7 +86,19 @@ ANTI-AI-SLOP & PALETTE DISCIPLINE:
 
 PROFESSIONAL ICONS (NO EMOJIS):
 - NEVER use raw Unicode emojis (e.g. 🚀, 💡, 🔥, ✨, 📱, ⚙️, 💻) for UI icons, badges, bullet points, or buttons.
-- ALWAYS use professional vector icons: Lucide icons via \`<i data-lucide="..."></i>\` (include \`<script src="https://unpkg.com/lucide@latest"></script>\` in <head>) or inline SVGs.`;
+- ALWAYS use professional vector icons: Lucide icons via \`<i data-lucide="..."></i>\` (include \`<script src="https://unpkg.com/lucide@latest"></script>\` in <head>) or inline SVGs.
+
+DYNAMIC PHOTOGRAPHY & AUTO-ADJUSTING IMAGE SLOTS:
+- Tangible / Physical Subjects (Hardware, Vehicles, Nature, Devices, Architecture, Biology, Products):
+  Include 1 (or max 2) dynamic photography slots to visually anchor the poster.
+- Abstract / Logic Subjects (Algorithms, Databases, Compilers, State Machines, Git, APIs):
+  Do NOT use photography. Use syntax code blocks, flow diagrams, or KPI stats instead.
+- Framing & Orientation Contract:
+  Wrap every image in an .img-frame with one orientation class:
+  * .img-horizontal (Wide card banner, span 8 or 12): <div class="img-frame img-horizontal"><img src="asset:specific visual noun" alt="..."></div>
+  * .img-vertical (2-column split or tall card, span 4 or 6): <div class="img-frame img-vertical"><img src="asset:specific visual noun" alt="..."></div>
+  * .img-ambient (Subtle background texture with scrim): <div class="img-frame img-ambient"><img src="asset:texture or backdrop" alt="..."></div>
+- Query Rules: ALWAYS use specific, tangible nouns (e.g. "ferrari f40 red rear wing", "datacenter server rack fiber optics", "spacex falcon 9 rocket plume"). NEVER search generic buzzwords like "business", "technology", "success".`;
     addLayer(1, 'Core Base Instructions', input.baseInstructions || defaultBase, 'Core Base Instructions');
 
     // Layer 2: Persistent Memory
@@ -120,6 +132,7 @@ PROFESSIONAL ICONS (NO EMOJIS):
       'NO RAW EMOJIS: Never use emojis for UI icons, features, or buttons. Use Lucide icons (<i data-lucide="..."></i>) or SVG vector icons exclusively.',
       'CANONICAL 2-TIER ARTBOARD: The poster content starts directly with <header class="poster-hero"> and flows into <section class="poster-grid"> with flex: 1. Child cards stretch naturally to fill the 1440px canvas without needing filler footers or leaving black holes.',
       'NO TOPBAR CHROME: Never generate <nav> bars, faux creator handles (@handle), or top status pills (e.g. "ARCHIVAL EDITION", "SYS.DOC") unless explicitly requested.',
+      'DYNAMIC IMAGE FRAMING CONTRACT: When photography is included, images MUST be placed inside `<div class="img-frame img-[horizontal|vertical|ambient]"><img src="asset:<query>" alt="..."></div>`. Never output bare unconstrained <img> tags.',
       'TYPOGRAPHY READABILITY RULE: In 3:4 posters and diagrams, NEVER use font sizes below 16px. Ensure all diagram node labels, steps, cards, and text are crisp and immediately readable on small devices (diagram titles >= 18px, headline >= 64px, subheading >= 24px).',
       'Mobile-first responsive styling: default layout for mobile, min-width media queries for tablet (768px) and desktop (1024px).',
       'No heavy frameworks or build tools; pure browser-native standard HTML5, CSS3, and ES6 JavaScript.',

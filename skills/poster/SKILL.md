@@ -81,11 +81,37 @@ The engine MUST dynamically select the optimal visual composition for the prompt
 5. 📜 **Editorial Feature Stacks** (Narratives, guides, facts):
    - 3–4 rich feature cards spanning the grid with custom accent borders and glassmorphism.
 
+## Dynamic Photography & Image Framing Contracts
+When photography elevates the topic (physical hardware, vehicles, nature, architecture, biology), include 1 or 2 dynamic image slots using the declarative syntax:
+```html
+<!-- Horizontal Banner (Top of wide card) -->
+<div class="img-frame img-horizontal">
+  <img src="asset:ferrari f40 cockpit steering wheel" alt="Cockpit">
+</div>
+
+<!-- Vertical Split (2-column card) -->
+<div class="img-frame img-vertical">
+  <img src="asset:spacex starship raptor engine" alt="Raptor Engine">
+</div>
+
+<!-- Ambient Backdrop (Behind card typography) -->
+<div class="img-frame img-ambient">
+  <img src="asset:carbon fiber weave dark" alt="Texture">
+</div>
+```
+**Rules**:
+- Max 1–2 photos per poster.
+- For abstract code/logic (algorithms, git, databases), do NOT use photos. Use code cards or diagrams.
+- Query keywords MUST be tangible visual nouns (never abstract words like "success" or "technology").
+
 ## Mandatory CSS Styling Rules
 1. `html, body` MUST have `margin: 0 !important; padding: 0 !important; width: 1080px !important; height: 1440px !important; overflow: hidden !important; background: transparent;`.
 2. `.poster-artboard` MUST have `width: 1080px; height: 1440px; margin: 0; padding: 64px 60px; position: relative; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;`.
 3. `.poster-content` MUST have `display: flex; flex-direction: column; height: 100%; gap: 24px; position: relative; z-index: 10;`.
 4. `.poster-hero` MUST have `flex-shrink: 0;`.
 5. `.poster-grid` MUST have `flex: 1; display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px;`. All direct child cards MUST stretch (`height: 100%;`) to ensure zero bottom empty voids.
-6. Cards, diagram nodes, and grid blocks must have tight, uniform gaps (`gap: 20px;` to `24px;`) and generous internal padding (`24px` to `32px`).
-7. Every visible container MUST have a persistent `data-od-id="..."` attribute.
+6. `.img-frame` MUST have `position: relative; overflow: hidden; border-radius: 12px; background: var(--bg-surface-elevated, #161922);`. Child `img` MUST have `position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;`.
+7. `.img-horizontal` MUST have `width: 100%; aspect-ratio: 16 / 9; max-height: 220px;`.
+8. `.img-vertical` MUST have `width: 100%; height: 100%; min-height: 280px;`.
+9. Cards, diagram nodes, and grid blocks must have tight, uniform gaps (`gap: 20px;` to `24px;`) and generous internal padding (`24px` to `32px`).
+10. Every visible container MUST have a persistent `data-od-id="..."` attribute.

@@ -1,8 +1,11 @@
 import { randomUUID } from 'node:crypto';
+import path from 'node:path';
+import fs from 'node:fs';
 import type { GenerationInput, RefinementInput, GenerationResult } from '../contracts/engine.ts';
 import type { WorkspaceManager } from '../workspace/workspace.ts';
 import { PromptComposer } from '../prompt/composer.ts';
 import type { GeminiProviderManager } from '../providers/manager.ts';
+import type { AssetProviderManager } from '../assets/manager.ts';
 import type { MarkdownMemoryStore } from '../memory/store.ts';
 import type { SessionTracker } from '../memory/session.ts';
 import { FilesystemDiffEngine } from '../workspace/diff.ts';
@@ -14,6 +17,7 @@ import { PosterTemplateRegistry } from '../templates/posters.ts';
 export class PosterEngine {
   private workspaceManager: WorkspaceManager;
   private providerManager: GeminiProviderManager;
+  private assetManager?: AssetProviderManager;
   private promptComposer: PromptComposer;
   private memoryStore: MarkdownMemoryStore;
   private sessionTracker: SessionTracker;
@@ -26,11 +30,13 @@ export class PosterEngine {
   constructor(dependencies: {
     workspaceManager: WorkspaceManager;
     providerManager: GeminiProviderManager;
+    assetManager?: AssetProviderManager;
     memoryStore: MarkdownMemoryStore;
     sessionTracker: SessionTracker;
   }) {
     this.workspaceManager = dependencies.workspaceManager;
     this.providerManager = dependencies.providerManager;
+    this.assetManager = dependencies.assetManager;
     this.memoryStore = dependencies.memoryStore;
     this.sessionTracker = dependencies.sessionTracker;
 
@@ -81,12 +87,23 @@ STRUCTURE & LAYOUT RULES:
    - 📜 EDITORIAL FEATURE DECKS (Narratives, guides, facts):
      3–4 rich feature cards spanning the grid with custom accent borders and glassmorphism.
 4. TYPOGRAPHY SCALING:
-   - Main Headline: 64px–76px (bold, punchy, letter-spacing: -0.03em, word-break: break-word).
-   - Subheading: 24px–28px (readable, clear line-height: 1.45).
-   - Card Titles: 22px–26px (font-weight: 700).
-   - Card Body: 17px–19px (line-height: 1.55).
-   - DIAGRAMS / ARCHITECTURE FLOWS / STEP CARDS: Node titles MUST be 18px–22px, badges 15px–17px, connector arrows 20px–24px.
-   - ABSOLUTE MINIMUM FONT SIZE: NEVER use font sizes below 16px anywhere.
+    - Main Headline: 64px–76px (bold, punchy, letter-spacing: -0.03em, word-break: break-word).
+    - Subheading: 24px–28px (readable, clear line-height: 1.45).
+    - Card Titles: 22px–26px (font-weight: 700).
+    - Card Body: 17px–19px (line-height: 1.55).
+    - DIAGRAMS / ARCHITECTURE FLOWS / STEP CARDS: Node titles MUST be 18px–22px, badges 15px–17px, connector arrows 20px–24px.
+    - ABSOLUTE MINIMUM FONT SIZE: NEVER use font sizes below 16px anywhere.
+5. DYNAMIC PHOTOGRAPHY & AUTO-ADJUSTING IMAGE SLOTS:
+   - Tangible/Physical Subjects (Vehicles, Hardware, Architecture, Nature, Devices, Biology, Products):
+     Include 1 (or max 2) dynamic image slots to visually anchor the poster.
+   - Abstract/Logic Subjects (Algorithms, Databases, Compilers, State Machines, Git, APIs):
+     Do NOT use photography. Use syntax code blocks, flow diagrams, or KPI stats instead.
+   - Framing & Orientation Contract:
+     Every image MUST be placed in an .img-frame with one orientation class:
+     * .img-horizontal (Wide card banner, span 8 or 12): <div class="img-frame img-horizontal"><img src="asset:specific visual noun" alt="..."></div>
+     * .img-vertical (2-column split or tall card, span 4 or 6): <div class="img-frame img-vertical"><img src="asset:specific visual noun" alt="..."></div>
+     * .img-ambient (Subtle background texture with scrim): <div class="img-frame img-ambient"><img src="asset:texture or backdrop" alt="..."></div>
+   - Query Rules: ALWAYS use specific, tangible nouns (e.g. "ferrari f40 red rear wing", "datacenter server rack fiber optics", "spacex falcon 9 rocket plume"). NEVER search generic buzzwords like "business", "technology", "success".
 
 The document MUST contain:
 <body>
@@ -144,6 +161,40 @@ html, body {
 }
 .poster-grid > * {
   height: 100%;
+}
+/* Dynamic Image Framing & Auto-Crop Contracts */
+.img-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--bg-surface-elevated, #161922);
+}
+.img-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.img-horizontal {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 220px;
+}
+.img-vertical {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+}
+.img-ambient {
+  position: absolute;
+  inset: 0;
+  opacity: 0.25;
+  mix-blend-mode: luminosity;
+  pointer-events: none;
+  z-index: 0;
 }
 /* Individual cards, pipeline containers, or bento blocks should have tight uniform gap (20px), stretch to fill height, and have generous internal padding (24px to 32px) */
 
@@ -223,6 +274,59 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
       this.workspaceManager.writeFile(input.projectId, 'index.html', htmlContent);
     }
 
+    // Dynamic Asset Resolution & Local Caching
+    let stockProvidersUsed: string[] = [];
+    if (this.assetManager && htmlContent) {
+      const assetRes = await this.resolveDynamicAssets(input.projectId, projectRoot, htmlContent);
+      if (assetRes.html !== htmlContent) {
+        htmlContent = assetRes.html;
+        this.workspaceManager.writeFile(input.projectId, 'index.html', htmlContent);
+      }
+      stockProvidersUsed = assetRes.usedProviders;
+    }
+
+    // Ensure styles.css includes image container framing contracts
+    if (cssContent && !cssContent.includes('.img-frame')) {
+      const imgCss = `
+/* Auto-Adjusting Dynamic Image Containers */
+.img-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--bg-surface-elevated, #161922);
+}
+.img-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.img-horizontal {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 220px;
+}
+.img-vertical {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+}
+.img-ambient {
+  position: absolute;
+  inset: 0;
+  opacity: 0.25;
+  mix-blend-mode: luminosity;
+  pointer-events: none;
+  z-index: 0;
+}
+`;
+      cssContent += '\n' + imgCss;
+      this.workspaceManager.writeFile(input.projectId, 'styles.css', cssContent);
+    }
+
     const postSnapshot = await this.diffEngine.snapshot(projectRoot);
     const changes = this.diffEngine.computeDiff(preSnapshot, postSnapshot);
 
@@ -245,7 +349,7 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
         accountId: llmResponse.accountId,
         durationMs: Date.now() - startTime,
         fallbackOccurred: false,
-        stockProvidersUsed: []
+        stockProvidersUsed
       }
     };
   }
@@ -287,6 +391,29 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
       this.workspaceManager.writeFile(input.projectId, filename, content);
     }
 
+    // Dynamic Asset Resolution & Local Caching on Refinement
+    let refineStockProvidersUsed: string[] = [];
+    let refineHtml = this.workspaceManager.readFile(input.projectId, 'index.html') || '';
+    let refineCss = this.workspaceManager.readFile(input.projectId, 'styles.css') || '';
+    if (this.assetManager && refineHtml) {
+      const assetRes = await this.resolveDynamicAssets(input.projectId, projectRoot, refineHtml);
+      if (assetRes.html !== refineHtml) {
+        refineHtml = assetRes.html;
+        this.workspaceManager.writeFile(input.projectId, 'index.html', refineHtml);
+      }
+      refineStockProvidersUsed = assetRes.usedProviders;
+    }
+    if (refineCss && !refineCss.includes('.img-frame')) {
+      refineCss += '\n' + `
+.img-frame { position: relative; overflow: hidden; border-radius: 12px; background: var(--bg-surface-elevated, #161922); }
+.img-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.img-horizontal { width: 100%; aspect-ratio: 16 / 9; max-height: 220px; }
+.img-vertical { width: 100%; height: 100%; min-height: 280px; }
+.img-ambient { position: absolute; inset: 0; opacity: 0.25; mix-blend-mode: luminosity; pointer-events: none; z-index: 0; }
+`;
+      this.workspaceManager.writeFile(input.projectId, 'styles.css', refineCss);
+    }
+
     const postSnapshot = await this.diffEngine.snapshot(projectRoot);
     const changes = this.diffEngine.computeDiff(preSnapshot, postSnapshot);
 
@@ -309,7 +436,7 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
         accountId: llmResponse.accountId,
         durationMs: Date.now() - startTime,
         fallbackOccurred: false,
-        stockProvidersUsed: []
+        stockProvidersUsed: refineStockProvidersUsed
       }
     };
   }
@@ -456,6 +583,98 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
     clean = clean.replace(/\.badge-container\s*\{[\s\S]*?\}/gi, '');
     clean = clean.replace(/\.footer-(?:badge-seal|brand-info|specs)\s*\{[\s\S]*?\}/gi, '');
     return clean;
+  }
+
+  /**
+   * Deterministically resolves declarative asset placeholders (e.g. src="asset:<query>")
+   * into real high-res images from Unsplash -> Pexels -> Pixabay -> local cache, or generative SVG fallback.
+   */
+  private async resolveDynamicAssets(
+    projectId: string,
+    projectRoot: string,
+    html: string
+  ): Promise<{ html: string; usedProviders: string[] }> {
+    let resolvedHtml = html;
+    const usedProviders: string[] = [];
+    if (!this.assetManager) return { html, usedProviders };
+
+    const assetRegex = /<img\b([^>]*?)\bsrc=["']asset:([^"']+)["']([^>]*?)>/gi;
+    const matches = Array.from(resolvedHtml.matchAll(assetRegex));
+
+    if (matches.length === 0) {
+      return { html, usedProviders };
+    }
+
+    const assetsDir = path.join(projectRoot, 'assets');
+    fs.mkdirSync(assetsDir, { recursive: true });
+
+    for (const match of matches) {
+      const fullImgTag = match[0];
+      const preAttrs = match[1] || '';
+      const rawQuery = match[2].trim();
+      const postAttrs = match[3] || '';
+
+      // Determine orientation from classes or query string params
+      let orientation: 'landscape' | 'portrait' | 'square' = 'landscape';
+      const combinedAttrs = `${preAttrs} ${postAttrs}`.toLowerCase();
+      if (combinedAttrs.includes('img-vertical') || combinedAttrs.includes('portrait')) {
+        orientation = 'portrait';
+      } else if (combinedAttrs.includes('img-square') || combinedAttrs.includes('square')) {
+        orientation = 'square';
+      }
+
+      try {
+        const searchResult = await this.assetManager.search({
+          query: rawQuery,
+          orientation,
+          limit: 1
+        });
+
+        if (searchResult.assets.length > 0) {
+          const topAsset = searchResult.assets[0];
+          const downloadedPath = await this.assetManager.downloadAsset(topAsset, assetsDir);
+          const relPath = path.relative(projectRoot, downloadedPath).replace(/\\/g, '/');
+
+          resolvedHtml = resolvedHtml.replace(fullImgTag, `<img ${preAttrs}src="${relPath}"${postAttrs}>`);
+          if (!usedProviders.includes(topAsset.provider)) {
+            usedProviders.push(topAsset.provider);
+          }
+        } else {
+          const fallbackUri = this.createGenerativeSvgDataUri(rawQuery, orientation);
+          resolvedHtml = resolvedHtml.replace(fullImgTag, `<img ${preAttrs}src="${fallbackUri}"${postAttrs}>`);
+        }
+      } catch (err) {
+        console.warn(`[PosterEngine] Failed to resolve asset "${rawQuery}":`, err instanceof Error ? err.message : String(err));
+        const fallbackUri = this.createGenerativeSvgDataUri(rawQuery, orientation);
+        resolvedHtml = resolvedHtml.replace(fullImgTag, `<img ${preAttrs}src="${fallbackUri}"${postAttrs}>`);
+      }
+    }
+
+    return { html: resolvedHtml, usedProviders };
+  }
+
+  private createGenerativeSvgDataUri(query: string, orientation: 'landscape' | 'portrait' | 'square'): string {
+    const w = orientation === 'portrait' ? 800 : (orientation === 'square' ? 800 : 1200);
+    const h = orientation === 'portrait' ? 1200 : 800;
+    const cleanQuery = query.replace(/[<>"'&]/g, '').slice(0, 40);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+      <defs>
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#0f172a"/>
+          <stop offset="50%" stop-color="#1e293b"/>
+          <stop offset="100%" stop-color="#090d16"/>
+        </linearGradient>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#bgGrad)"/>
+      <rect width="100%" height="100%" fill="url(#grid)"/>
+      <circle cx="${w / 2}" cy="${h / 2}" r="${Math.min(w, h) / 4}" fill="rgba(59, 130, 246, 0.08)" filter="blur(40px)"/>
+      <text x="50%" y="48%" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="600" text-anchor="middle" letter-spacing="0.05em">VISUAL ASSET</text>
+      <text x="50%" y="54%" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" text-anchor="middle">${cleanQuery}</text>
+    </svg>`;
+    return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
   }
 
   public getTemplateRegistry(): PosterTemplateRegistry {

@@ -14,7 +14,7 @@ export interface AssetManagerConfig {
 
 export class AssetProviderManager {
   private adapters: Map<AssetProviderType, StockProviderAdapter> = new Map();
-  private fallbackOrder: AssetProviderType[] = ['pexels', 'pixabay', 'unsplash', 'local'];
+  private fallbackOrder: AssetProviderType[] = ['unsplash', 'pexels', 'pixabay', 'local'];
 
   constructor(config: AssetManagerConfig) {
     this.adapters.set('pexels', new PexelsAdapter(config.pexelsKeys));

@@ -64,6 +64,7 @@ export class StandaloneDesignEngine implements DesignEngine {
       pexelsKeys: options.pexelsKeys || [],
       pixabayKeys: options.pixabayKeys || [],
       unsplashKeys: options.unsplashKeys || [],
+      preferredOrder: ['unsplash', 'pexels', 'pixabay', 'local'],
       localAssetsDir: path.join(this.dataDir, 'assets')
     });
 
@@ -80,6 +81,7 @@ export class StandaloneDesignEngine implements DesignEngine {
     const deps = {
       workspaceManager: this.workspaceManager,
       providerManager: this.providerManager,
+      assetManager: this.assetManager,
       memoryStore: this.memoryStore,
       sessionTracker: this.sessionTracker
     };
