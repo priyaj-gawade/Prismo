@@ -133,8 +133,8 @@ export class PosterTemplateRegistry {
       }
     }
 
-    // Default fallback to first if no specific match
-    return bestMatch || Array.from(this.templates.values())[0] || null;
+    // Only return if there was an actual keyword/archetype match
+    return highestScore > 0 ? bestMatch : null;
   }
 
   public formatGroundedContext(prompt: string): string {
@@ -142,40 +142,31 @@ export class PosterTemplateRegistry {
     if (this.templates.size === 0) return '';
 
     const best = this.findBestTemplate(prompt);
-    const all = Array.from(this.templates.values());
+    // If no specific template was requested or strongly matched, do NOT inject any template bias
+    if (!best) return '';
 
     const lines: string[] = [
-      '## High-Craft Editable Poster Templates & Structural Patterns',
-      'The engine provides pre-validated, high-craft 3:4 poster templates built without AI slop, featuring rich dual-typography, tactile visual depth, and purposeful footers:',
+      '## Grounded Poster Template Reference (Optional Structural Reference)',
+      `A grounded template archetype (\`${best.meta.id}\` - ${best.meta.name}) matched this request:`,
       ''
     ];
 
-    for (const tpl of all) {
-      lines.push(`### Template Archetype: \`${tpl.meta.id}\` (${tpl.meta.name})`);
-      lines.push(`- **Archetype**: ${tpl.meta.archetype}`);
-      lines.push(`- **Description**: ${tpl.meta.description}`);
-      lines.push(`- **Editable Slots**: ${Object.keys(tpl.meta.slots).join(', ')}`);
-      lines.push('');
+    const isCleanRequested = /no\s+(header|footer)|without\s+(header|footer)|clean\s+(poster|layout)/i.test(prompt);
+    lines.push(`### Relevant Grounded Archetype: \`${best.meta.id}\``);
+    lines.push(`Reference structure (adapt and refine freely; DO NOT treat as a rigid template):`);
+    lines.push('```html');
+    
+    const cleanSnippet = this.extractStructuralSnippet(best.html, { isCleanRequested });
+    lines.push(cleanSnippet);
+    lines.push('```');
+    lines.push('');
+    lines.push('**Key CSS Design Tokens to reference:**');
+    lines.push('```css');
+    const rootMatch = best.css.match(/:root\s*\{[\s\S]*?\}/i);
+    if (rootMatch) {
+      lines.push(rootMatch[0]);
     }
-
-    if (best) {
-      const isCleanRequested = /no\s+(header|footer)|without\s+(header|footer)|clean\s+(poster|layout)/i.test(prompt);
-      lines.push(`### Recommended Archetype for this Request: \`${best.meta.id}\``);
-      lines.push(`Follow this clean structural hierarchy (starts directly with .poster-hero; NO top navigation bar or faux handles):`);
-      lines.push('```html');
-      
-      const cleanSnippet = this.extractStructuralSnippet(best.html, { isCleanRequested });
-      lines.push(cleanSnippet);
-      lines.push('```');
-      lines.push('');
-      lines.push('**Key CSS Design Tokens to replicate:**');
-      lines.push('```css');
-      const rootMatch = best.css.match(/:root\s*\{[\s\S]*?\}/i);
-      if (rootMatch) {
-        lines.push(rootMatch[0]);
-      }
-      lines.push('```');
-    }
+    lines.push('```');
 
     return lines.join('\n');
   }

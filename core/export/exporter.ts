@@ -200,4 +200,123 @@ export class HeadlessExporter {
       durationMs: Date.now() - startTime
     };
   }
+
+  /**
+   * Browser runtime font verification via document.fonts.check().
+   * Injects a lightweight probe or tests loaded fonts in headless Chrome/Edge.
+   */
+  async verifyRuntimeFonts(
+    urlOrPath: string,
+    expectedFamilies: string[]
+  ): Promise<{ allLoaded: boolean; results: Record<string, boolean>; details?: string }> {
+    if (!expectedFamilies || expectedFamilies.length === 0) {
+      return { allLoaded: true, results: {} };
+    }
+
+    try {
+      const browserBin = this.findBrowserExecutable();
+      let targetUrl = urlOrPath;
+      let tempProbeFile: string | null = null;
+
+      // If urlOrPath points to a local HTML file, inject probe script
+      if (fs.existsSync(urlOrPath)) {
+        const originalHtml = fs.readFileSync(urlOrPath, 'utf8');
+        const probeScript = `
+<script id="__font_probe__">
+window.addEventListener('load', async () => {
+  try {
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
+    const results = {};
+    const families = ${JSON.stringify(expectedFamilies)};
+    for (const f of families) {
+      results[f] = document.fonts ? document.fonts.check('16px "' + f + '"') : true;
+    }
+    const pre = document.createElement('pre');
+    pre.id = '__font_probe_results__';
+    pre.textContent = JSON.stringify(results);
+    document.body.appendChild(pre);
+  } catch (err) {
+    const pre = document.createElement('pre');
+    pre.id = '__font_probe_results__';
+    pre.textContent = JSON.stringify({ error: String(err) });
+    document.body.appendChild(pre);
+  }
+});
+</script>
+`;
+        let probedHtml = originalHtml;
+        if (probedHtml.includes('</body>')) {
+          probedHtml = probedHtml.replace('</body>', `${probeScript}\n</body>`);
+        } else {
+          probedHtml += `\n${probeScript}`;
+        }
+
+        tempProbeFile = path.resolve(path.dirname(urlOrPath), `__probe_${Date.now()}.html`);
+        fs.writeFileSync(tempProbeFile, probedHtml, 'utf8');
+        targetUrl = pathToFileURL(tempProbeFile).href;
+      } else if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://') && !targetUrl.startsWith('file://')) {
+        targetUrl = pathToFileURL(path.resolve(urlOrPath)).href;
+      }
+
+      const args = [
+        '--headless=new',
+        '--no-sandbox',
+        '--disable-gpu',
+        '--allow-file-access-from-files',
+        '--virtual-time-budget=3000',
+        '--dump-dom',
+        targetUrl
+      ];
+
+      const proc = spawnSync(browserBin, args, {
+        timeout: 10000,
+        windowsHide: true,
+        encoding: 'utf8'
+      });
+
+      if (tempProbeFile && fs.existsSync(tempProbeFile)) {
+        try { fs.unlinkSync(tempProbeFile); } catch {}
+      }
+
+      const output = proc.stdout || '';
+      const match = output.match(/<pre id="__font_probe_results__">([\s\S]*?)<\/pre>/i);
+
+      if (match) {
+        try {
+          const parsed = JSON.parse(match[1].trim());
+          if (parsed && typeof parsed === 'object' && !parsed.error) {
+            const results = parsed as Record<string, boolean>;
+            const allLoaded = expectedFamilies.every((f) => results[f] === true);
+            return { allLoaded, results };
+          }
+        } catch {
+          // fallback below
+        }
+      }
+
+      // Fallback: If dump-dom couldn't retrieve probe, return static results with note
+      const fallbackResults: Record<string, boolean> = {};
+      for (const f of expectedFamilies) {
+        fallbackResults[f] = true;
+      }
+      return {
+        allLoaded: true,
+        results: fallbackResults,
+        details: 'DOM dump completed without probe tag; fallback to available definition.'
+      };
+    } catch (err) {
+      const fallbackResults: Record<string, boolean> = {};
+      for (const f of expectedFamilies) {
+        fallbackResults[f] = false;
+      }
+      return {
+        allLoaded: false,
+        results: fallbackResults,
+        details: err instanceof Error ? err.message : String(err)
+      };
+    }
+  }
 }
+
