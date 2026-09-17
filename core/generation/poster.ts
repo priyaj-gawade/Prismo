@@ -64,9 +64,12 @@ CRITICAL POSTER REQUIREMENT:
 Strict 3:4 Full-Bleed Canvas Dimensions: ${width}px x ${height}px.
 
 STRUCTURE & LAYOUT RULES:
-1. NO HEADER PILLS / BADGES: Do NOT generate top badge pills (e.g. "SYS.DOC // 02", "PROGRAMMING EXCELLENCE") or date tags. Start directly with the main headline/hero.
-2. NO FOOTER SPEC BARS: Do NOT generate bottom telemetry bars, edition labels, or brand spec footers.
-3. FULL VERTICAL DENSITY: The hero (~25-30%) and dynamic content grid (~70-75%) MUST fill the full ${height}px height cohesively.
+1. NO HEADER PILLS / BADGES: Do NOT generate top badge pills (e.g. "SYS.DOC // 02", "PROGRAMMING EXCELLENCE", "ARCHIVAL EDITION", "EST. 1974") or date tags. Start directly with the main headline/hero.
+2. NO FOOTER SPEC BARS: Do NOT generate bottom telemetry bars, edition labels, fake URLs, or brand spec footers.
+3. DYNAMIC BENTO GRID & TIGHT GAPS:
+   - Gaps between cards MUST be tight and consistent (gap: 20px). NEVER use space-between on .poster-grid to create huge empty gaps.
+   - Cards themselves MUST STRETCH to fill vertical space: each card child must have \`flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 28px 32px;\`.
+   - Each card must be richly detailed: (a) Lucide vector icon + tag at top, (b) Bold title (22px–26px), (c) Rich 3-4 line explanation (17px–19px), and (d) Stat pill or key takeaway badge (15px–16px).
 4. TYPOGRAPHY SCALING:
    - Main Headline: 64px–76px (bold, punchy, letter-spacing: -0.03em, word-break: break-word).
    - Subheading: 24px–28px (readable, clear line-height: 1.45).
@@ -116,7 +119,7 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 32px;
+  gap: 28px;
   position: relative;
   z-index: 10;
 }
@@ -124,8 +127,15 @@ html, body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 20px;
+}
+.poster-grid > * {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  gap: 24px;
+  padding: 28px 32px;
+  border-radius: 18px;
 }
 
 Ensure you output BOTH:
