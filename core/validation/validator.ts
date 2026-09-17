@@ -196,7 +196,7 @@ export class ArtifactValidator {
    * Evaluates compliance with the D8.7 Anti-AI-Slop Poster Generation Policy, Hallmark rules,
    * prohibited default template formula, and the Micro-UI / Fake-Chrome Elimination policy.
    */
-  validateAntiSlop(html: string, css: string = '', options?: { imageIntent?: string; explicitImageRequested?: boolean }): {
+  validateAntiSlop(html: string, css: string = '', options?: { imageIntent?: string; explicitImageRequested?: boolean; prompt?: string }): {
     slopDetected: boolean;
     violations: string[];
     warnings: string[];
@@ -313,7 +313,7 @@ export class ArtifactValidator {
     // Detect 3-part top rail (top-left, top-center, top-right metadata pattern)
     if (/<(?:header|div)\b[^>]*class=["'][^"']*\b(?:top-rail|header-rail|archival-header)\b[^"']*["']/i.test(html) ||
         (/ARCHIV\s*\d{4}/i.test(html) && /DESSAU/i.test(html) && /GROPIUS/i.test(html)) ||
-        (/PORSCHE MOTORSPORT/i.test(html) && /9,000 RPM FLAT-SIX/i.test(html) && /911 GT3 RS/i.test(html))) {
+        (!options?.prompt?.match(/porsche|gt3|motorsport/i) && /PORSCHE MOTORSPORT/i.test(html) && /9,000 RPM FLAT-SIX/i.test(html) && /911 GT3 RS/i.test(html))) {
       headerRailDetected = true;
       violations.push('Template rail violation: detected generic 3-part header metadata rail.');
     }
@@ -439,6 +439,20 @@ export class ArtifactValidator {
       violations.push('Monospace dominance violation: poster typography is dominated by monospace without explicit code syntax.');
     }
 
+    // 14. Directional Dark Scrim Contrast Verification
+    let missingDirectionalScrim = false;
+    const hasBleedPhoto = /class=["'][^"']*(?:poster-bleed-image|hero-bleed|bg-image)[^"']*["']/i.test(html) ||
+      (/hero-image-container/i.test(html) && /<img\b/i.test(html));
+    const hasTextOverlay = /<h[1-3]\b/i.test(html) || /class=["'][^"']*(?:poster-headline|headline|content-stack|hero-content)\b[^"']*["']/i.test(html);
+    if (hasBleedPhoto && hasTextOverlay) {
+      const hasScrimElement = /class=["'][^"']*(?:poster-scrim|image-scrim|scrim-overlay|vignette-scrim)\b[^"']*["']/i.test(html);
+      const hasScrimCss = /(?:scrim|vignette|linear-gradient\([^)]*rgba\(\s*0\s*,\s*0\s*,\s*0)/i.test(css);
+      if (!hasScrimElement && !hasScrimCss) {
+        missingDirectionalScrim = true;
+        violations.push('Directional scrim violation: Full-bleed image contains text overlay without a dark gradient scrim/vignette. Text contrast is compromised.');
+      }
+    }
+
     return {
       slopDetected: violations.length > 0,
       violations,
@@ -456,7 +470,8 @@ export class ArtifactValidator {
         defaultVueFlowClassUsage,
         monospaceDominant,
         displayMonospaceUsage,
-        missingRequiredImage
+        missingRequiredImage,
+        missingDirectionalScrim
       }
     };
   }

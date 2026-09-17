@@ -39,3 +39,4 @@ Thumbs.db
 *.log
 *.tmp
 .system_generated/
+scratch/

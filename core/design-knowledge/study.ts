@@ -71,11 +71,52 @@ export class ReferenceStudyEngine {
       };
     }
 
-    if (/\b(?:porsche|mustang|supercar|motorsport|race\s*car|automotive)\b/i.test(lower)) {
-      const brand = /\bporsche\b/i.test(lower) ? 'Porsche 911 GT3 RS' : (/\bmustang\b/i.test(lower) ? 'Ford Mustang' : 'supercar');
+    // Automotive / Motorsport domain synthesis with brand detection
+    const autoMatch = lower.match(/\b(porsche(?:\s+911(?:\s+gt3(?:\s+rs)?)?)?|bmw(?:\s+m\d)?|ferrari|lamborghini|mercedes(?:\s+amg)?|audi(?:\s+rs)?|aston\s+martin|mclaren|bugatti|mustang|corvette|supercar|motorsport|race\s*car|ducati)\b/i);
+    if (autoMatch || /\b(?:car|cars|supercar|supercars|hypercar|motorsport|racing|automotive|downforce)\b/i.test(lower)) {
+      let brandQuery = 'supercar';
+      if (autoMatch) {
+        const raw = autoMatch[1].toLowerCase();
+        if (raw.includes('porsche')) brandQuery = 'Porsche 911 GT3 RS';
+        else if (raw.includes('bmw')) brandQuery = 'BMW M5 sports car';
+        else if (raw.includes('ferrari')) brandQuery = 'Ferrari sports car';
+        else if (raw.includes('lamborghini')) brandQuery = 'Lamborghini supercar';
+        else if (raw.includes('mercedes')) brandQuery = 'Mercedes AMG performance car';
+        else if (raw.includes('audi')) brandQuery = 'Audi RS performance car';
+        else if (raw.includes('mclaren')) brandQuery = 'McLaren supercar';
+        else if (raw.includes('aston')) brandQuery = 'Aston Martin sports car';
+        else if (raw.includes('bugatti')) brandQuery = 'Bugatti hypercar';
+        else if (raw.includes('mustang')) brandQuery = 'Ford Mustang sports car';
+        else if (raw.includes('corvette')) brandQuery = 'Chevrolet Corvette sports car';
+        else if (raw.includes('ducati')) brandQuery = 'Ducati superbike motorcycle';
+      }
       return {
-        primary: `${brand} race track dramatic lighting`,
-        fallback: `${brand} automotive editorial photography`
+        primary: `${brandQuery} race track dramatic lighting`,
+        fallback: `${brandQuery} automotive editorial photography`
+      };
+    }
+
+    // Athletics & Sports
+    if (/\b(?:athlete|athletics|running|runner|marathon|sneakers|nike|adidas|boxing|basketball|tennis|surfing)\b/i.test(lower)) {
+      return {
+        primary: 'athlete high performance athletic sports dramatic lighting',
+        fallback: 'sports action runner editorial photography'
+      };
+    }
+
+    // Luxury, Horology & Watches
+    if (/\b(?:watch|watches|rolex|horology|timepiece|luxury|perfume|fragrance|jewelry)\b/i.test(lower)) {
+      return {
+        primary: 'luxury mechanical watch craftsmanship studio dramatic lighting',
+        fallback: 'luxury timepiece editorial macro photography'
+      };
+    }
+
+    // Aviation & Aerospace
+    if (/\b(?:aerospace|aviation|aircraft|jet|fighter\s*jet|supersonic|rocket|spacex|nasa)\b/i.test(lower)) {
+      return {
+        primary: 'supersonic aircraft runway dramatic atmospheric sky lighting',
+        fallback: 'aerospace jet engineering photography'
       };
     }
 
@@ -93,7 +134,7 @@ export class ReferenceStudyEngine {
       };
     }
 
-    if (/\b(?:clapperboard|video\s+edit|cinema|film|movie)\b/i.test(lower)) {
+    if (/\b(?:clapperboard|video\s+edit|cinema|film|movie|director)\b/i.test(lower)) {
       return {
         primary: 'video editing timeline clapperboard film studio',
         fallback: 'cinematic film production camera clapperboard'
@@ -143,14 +184,10 @@ export class ReferenceStudyEngine {
     }
     // 3. Domain Heuristics (when user didn't explicitly mandate)
     else if (
-      pLower.includes('porsche') ||
-      pLower.includes('mustang') ||
-      pLower.includes('motorsport') ||
-      pLower.includes('supercar') ||
-      pLower.includes('automotive') ||
-      pLower.includes('clapperboard') ||
-      pLower.includes('cinematic') ||
-      pLower.includes('photograph')
+      // Automotive & Motorsport (all major brands and performance concepts)
+      /\b(?:car|cars|supercar|supercars|hypercar|motorsport|motorsports|automotive|racing|race\s*car|rally|f1|formula\s*1|grand\s*prix|le\s*mans|downforce|track\s*weapon|bmw|m-division|m-power|porsche|gt3|gt3\s*rs|ferrari|lamborghini|mercedes|amg|audi|audi\s*rs|aston\s*martin|mclaren|bugatti|corvette|mustang|shelby|dodge|nissan\s*gtr|supra|motorcycle|superbike|ducati)\b/i.test(pLower) ||
+      // High-Performance Editorial, Luxury, Athletics, Aviation & Cinema
+      /\b(?:athlete|athletics|running|marathon|sneakers|nike|adidas|boxing|watch|watches|rolex|horology|luxury|perfume|aerospace|aviation|aircraft|fighter\s*jet|rocket|spacex|nasa|telescope|astronomy|cinema|film|movie|director|clapperboard|cinematic|photograph|photography|vignette|scrim|hero\s*image)\b/i.test(pLower)
     ) {
       ref = CURATED_DESIGN_REFERENCES.find((r) => r.id === 'cinematic-editorial')!;
       imageIntent = 'image_required';

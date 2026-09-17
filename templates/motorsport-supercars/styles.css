@@ -1,0 +1,199 @@
+/* Hallmark · pre-emit critique: P5 H5 E5 S4 R5 V5 | grammar: img=full-bleed text=bottom-anchored type=bold-display dominant=image-dominant overlay=directional-scrim */
+
+@import url('tokens.css');
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 1080px !important;
+  height: 1440px !important;
+  overflow: hidden !important;
+  background: #05070A;
+}
+
+.poster-artboard {
+  width: 1080px;
+  height: 1440px;
+  margin: 0;
+  padding: 80px 80px 96px 80px;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #05070A;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Full-Bleed Image Container */
+.hero-image-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.poster-bleed-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 55%;
+  display: block;
+}
+
+/* Directional Dark Scrim / Vignette System: text position == dark effect position */
+.poster-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 1. Bottom-anchored text -> dark gradient at bottom fading upward */
+.poster-scrim.scrim-bottom {
+  background: linear-gradient(
+    180deg,
+    rgba(5, 7, 10, 0.35) 0%,
+    rgba(5, 7, 10, 0.1) 35%,
+    rgba(5, 7, 10, 0.75) 65%,
+    rgba(5, 7, 10, 0.98) 100%
+  );
+}
+
+/* 2. Top-anchored text -> dark gradient at top fading downward */
+.poster-scrim.scrim-top {
+  background: linear-gradient(
+    180deg,
+    rgba(5, 7, 10, 0.98) 0%,
+    rgba(5, 7, 10, 0.75) 35%,
+    rgba(5, 7, 10, 0.1) 65%,
+    rgba(5, 7, 10, 0) 100%
+  );
+}
+
+/* 3. Dual-anchored text -> top header + bottom content stack */
+.poster-scrim.scrim-dual {
+  background: linear-gradient(
+    180deg,
+    rgba(5, 7, 10, 0.8) 0%,
+    rgba(5, 7, 10, 0.15) 30%,
+    rgba(5, 7, 10, 0.7) 65%,
+    rgba(5, 7, 10, 0.98) 100%
+  );
+}
+
+/* Top Header */
+.poster-header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.brand-tag {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #F8FAFC;
+  text-transform: uppercase;
+}
+
+.model-code {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #EF4444;
+  text-transform: uppercase;
+}
+
+/* Bottom Content Stack */
+.content-stack {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 920px;
+}
+
+.poster-headline {
+  margin: 0;
+  font-size: 96px;
+  line-height: 0.95;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-style: normal;
+  display: flex;
+  flex-direction: column;
+}
+
+.headline-primary {
+  color: #F8FAFC;
+}
+
+.headline-accent {
+  color: #EF4444;
+  margin-top: 6px;
+}
+
+.poster-subtext {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 28px;
+  line-height: 1.5;
+  color: #94A3B8;
+  max-width: 800px;
+  font-weight: 400;
+}
+
+/* Minimalist Spec Strip */
+.spec-strip {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  margin-top: 12px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(248, 250, 252, 0.18);
+}
+
+.spec-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.spec-value {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 46px;
+  font-weight: 800;
+  color: #F8FAFC;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.spec-label {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #94A3B8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.spec-divider {
+  width: 1px;
+  height: 48px;
+  background-color: rgba(248, 250, 252, 0.2);
+}

@@ -107,6 +107,26 @@ export class PosterTemplateRegistry {
       if (meta.archetype === 'ui-telemetry' && (lower.includes('telemetry') || lower.includes('audio') || lower.includes('waveform') || lower.includes('transcript') || lower.includes('scribe') || lower.includes('model') || lower.includes('speech'))) {
         score += 50;
       }
+      if (meta.archetype === 'cinematic-hero-editorial' && (
+        lower.includes('supercar') ||
+        lower.includes('motorsport') ||
+        lower.includes('car') ||
+        lower.includes('automotive') ||
+        lower.includes('racing') ||
+        lower.includes('track') ||
+        lower.includes('porsche') ||
+        lower.includes('bmw') ||
+        lower.includes('ferrari') ||
+        lower.includes('mercedes') ||
+        lower.includes('audi') ||
+        lower.includes('downforce') ||
+        lower.includes('cinematic') ||
+        lower.includes('vignette') ||
+        lower.includes('scrim') ||
+        lower.includes('hero photography')
+      )) {
+        score += 60;
+      }
 
       // Specific keywords
       if (lower.includes('kraft') || lower.includes('paper') || lower.includes('tape') || lower.includes('serif') || lower.includes('hand-drawn')) {
@@ -117,6 +137,9 @@ export class PosterTemplateRegistry {
       }
       if (lower.includes('vue') || lower.includes('bento') || lower.includes('langchain') || lower.includes('dependency') || lower.includes('proxy')) {
         if (meta.id === 'bento-execution-pipeline') score += 100;
+      }
+      if (lower.includes('motorsport') || lower.includes('supercar') || lower.includes('supercars') || lower.includes('downforce') || lower.includes('gt3') || lower.includes('m-division') || lower.includes('track weapon')) {
+        if (meta.id === 'motorsport-supercars') score += 100;
       }
 
       // Description token matching

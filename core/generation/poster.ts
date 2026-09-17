@@ -187,7 +187,20 @@ ORCHESTRATION INSTRUCTIONS:
   4. Typographic hierarchy: Roman display headings as primary anchor, with selective accent typography encouraged (e.g. bold sans/grotesque paired with an expressive italic serif accent word or high-contrast color highlight). Never make an entire headline italic.
   5. Stable editability contract: Every major semantic element MUST include data-od-id (e.g. data-od-id="poster-root", data-od-id="headline", data-od-id="supporting-copy", data-od-id="hero-image", data-od-id="diagram", data-od-id="annotation", data-od-id="source-credit").
   6. Composition primitives are optional: Headline, supporting copy, imagery, code excerpts, diagrams, waveforms, transcripts, and annotations are semantic capabilities, NEVER mandatory ingredients. Use only what communicates the subject. Empty space must remain empty.
-  7. Adaptive image treatment: subtle gradient, localized scrim, vignette, duotone, or no overlay (never a blind dark overlay)
+  7. DIRECTIONAL DARK VIGNETTE / SCRIM MANDATE (CRITICAL):
+     Whenever a full-bleed or hero background image is present, YOU MUST include a directional dark scrim:
+     <div class="poster-scrim" data-od-id="poster-scrim"></div>
+     positioned at z-index: 1 between the image (z-index: 0) and text content (z-index: 2).
+     The dark gradient MUST strictly match the text position ("text position == dark effect position"):
+     - If text is at the BOTTOM (like Porsche reference):
+       .poster-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(5, 7, 10, 0.25) 0%, rgba(5, 7, 10, 0.1) 35%, rgba(5, 7, 10, 0.75) 65%, rgba(5, 7, 10, 0.98) 100%); }
+     - If text is at the TOP:
+       .poster-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(5, 7, 10, 0.98) 0%, rgba(5, 7, 10, 0.75) 35%, rgba(5, 7, 10, 0.1) 65%, rgba(5, 7, 10, 0) 100%); }
+     - If text is at BOTH top and bottom (e.g. brand header at top + headline/specs at bottom):
+       .poster-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(5, 7, 10, 0.85) 0%, rgba(5, 7, 10, 0.15) 30%, rgba(5, 7, 10, 0.7) 65%, rgba(5, 7, 10, 0.98) 100%); }
+     - If text is in top-left or corner:
+       .poster-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse at top left, rgba(5, 7, 10, 0.95) 0%, rgba(5, 7, 10, 0.7) 40%, rgba(5, 7, 10, 0) 80%); }
+     NEVER omit the dark scrim on photographic posters; white text on bright imagery without a dark scrim is strictly prohibited.
   8. Restrained secondary info: subtitles, paragraphs, and spec bars are strictly optional
 - PALETTE FREEDOM: Set explicit background color on .poster-artboard in styles.css matching the subject (e.g. warm linen, crisp white, deep obsidian, technical slate). Do NOT force dark navy.
 - PRE-EMIT CRITIQUE STAMP: Start styles.css with:
@@ -222,7 +235,7 @@ html, body {
   flex-direction: column;
 }
 
-/* Image Composition Primitives */
+/* Image Composition & Directional Scrim Primitives */
 .poster-bleed-image {
   position: absolute;
   inset: 0;
@@ -232,6 +245,21 @@ html, body {
   object-position: center;
   z-index: 0;
   display: block;
+}
+.poster-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.scrim-bottom {
+  background: linear-gradient(180deg, rgba(5, 7, 10, 0.25) 0%, rgba(5, 7, 10, 0.1) 35%, rgba(5, 7, 10, 0.75) 65%, rgba(5, 7, 10, 0.98) 100%);
+}
+.scrim-top {
+  background: linear-gradient(180deg, rgba(5, 7, 10, 0.98) 0%, rgba(5, 7, 10, 0.75) 35%, rgba(5, 7, 10, 0.1) 65%, rgba(5, 7, 10, 0) 100%);
+}
+.scrim-dual {
+  background: linear-gradient(180deg, rgba(5, 7, 10, 0.85) 0%, rgba(5, 7, 10, 0.15) 30%, rgba(5, 7, 10, 0.7) 65%, rgba(5, 7, 10, 0.98) 100%);
 }
 .poster-focal-frame {
   position: relative;
@@ -379,7 +407,8 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
     // Anti-Slop Check & Bounded Agent Correction (Karpathy: validate -> bounded agent correction -> validate again)
     const antiSlopOpts = {
       imageIntent: study.imageIntent,
-      explicitImageRequested: study.dna.explicitImageRequested
+      explicitImageRequested: study.dna.explicitImageRequested,
+      prompt: input.prompt
     };
     let antiSlop = this.validator.validateAntiSlop(htmlContent, cssContent, antiSlopOpts);
     if (antiSlop.slopDetected) {
@@ -473,6 +502,15 @@ FIX INSTRUCTIONS:
           }
         }
       }
+    }
+
+    // Directional Dark Scrim Safety Net: text position == dark effect position
+    const scrimApplied = this.ensureDirectionalScrim(htmlContent, cssContent);
+    if (scrimApplied.html !== htmlContent || scrimApplied.css !== cssContent) {
+      htmlContent = scrimApplied.html;
+      cssContent = scrimApplied.css;
+      this.workspaceManager.writeFile(input.projectId, 'index.html', htmlContent);
+      this.workspaceManager.writeFile(input.projectId, 'styles.css', cssContent);
     }
 
     // Extract 8-dimension composition grammar and record turn in session tracker
@@ -584,6 +622,15 @@ FIX INSTRUCTIONS:
     if (sanitizedRefine.html !== refineHtml || sanitizedRefine.css !== refineCss) {
       refineHtml = sanitizedRefine.html;
       refineCss = sanitizedRefine.css;
+      this.workspaceManager.writeFile(input.projectId, 'index.html', refineHtml);
+      this.workspaceManager.writeFile(input.projectId, 'styles.css', refineCss);
+    }
+
+    // Directional Dark Scrim Safety Net on Refinement
+    const scrimRefine = this.ensureDirectionalScrim(refineHtml, refineCss);
+    if (scrimRefine.html !== refineHtml || scrimRefine.css !== refineCss) {
+      refineHtml = scrimRefine.html;
+      refineCss = scrimRefine.css;
       this.workspaceManager.writeFile(input.projectId, 'index.html', refineHtml);
       this.workspaceManager.writeFile(input.projectId, 'styles.css', refineCss);
     }
@@ -920,7 +967,6 @@ FIX INSTRUCTIONS:
     // 3. Strip explicit archival / coordinate 3-part rail tokens
     newHtml = newHtml.replace(/<span\b[^>]*>\s*(?:ARCHIV\s*\d{4}|WALTER\s+GROPIUS|DESSAU)\s*<\/span>/gi, '');
     newHtml = newHtml.replace(/<span\b[^>]*>\s*(?:LAT\.\s*\d+°[^<]*|LONG\.\s*\d+°[^<]*|GESAMTKUNSTWERK)\s*<\/span>/gi, '');
-    newHtml = newHtml.replace(/<span\b[^>]*>\s*(?:PORSCHE\s+MOTORSPORT|9,000\s+RPM\s+FLAT-SIX)\s*<\/span>/gi, '');
 
     // 4. Remove banned rail class names so they don't trigger rail lint, without deleting inner markup
     newHtml = newHtml.replace(/\bclass=["']([^"']*\b(?:top-rail|header-rail|archival-header|bottom-rail|footer-rail)\b[^"']*)["']/gi, (match, classes) => {
@@ -955,6 +1001,80 @@ FIX INSTRUCTIONS:
       }
       return match;
     });
+
+    return { html: newHtml, css: newCss };
+  }
+
+  /**
+   * Directional Dark Scrim Safety Net
+   * Enforces the contract: text position == dark effect position
+   */
+  public ensureDirectionalScrim(html: string, css: string): { html: string; css: string } {
+    const hasBleedImage = /class=["'][^"']*(?:poster-bleed-image|hero-bleed|bg-image)[^"']*["']/i.test(html) ||
+      /<img\b[^>]*\bclass=["'][^"']*poster-bleed-image[^"']*["']/i.test(html) ||
+      (/hero-image-container/i.test(html) && /<img\b/i.test(html));
+
+    if (!hasBleedImage) return { html, css };
+
+    const hasScrimElement = /class=["'][^"']*(?:poster-scrim|image-scrim|scrim-overlay|vignette-scrim)[^"']*["']/i.test(html);
+    let newHtml = html;
+    let newCss = css;
+
+    // Detect text placement: bottom, top, or dual
+    const hasTopHeader = /<header\b/i.test(html) || /class=["'][^"']*(?:top-section|poster-header|brand-tag|eyebrow|top-bar|model-code)\b[^"']*["']/i.test(html);
+    const hasBottomText = /class=["'][^"']*(?:content-stack|hero-content|bottom|specs|spec-strip|specs-grid|specs-container)\b[^"']*["']/i.test(html) ||
+      /margin-top:\s*auto/i.test(css) ||
+      /justify-content:\s*(?:space-between|flex-end)/i.test(css);
+
+    let scrimClass = 'scrim-bottom';
+    if (hasTopHeader && hasBottomText) {
+      scrimClass = 'scrim-dual';
+    } else if (hasTopHeader && !hasBottomText) {
+      scrimClass = 'scrim-top';
+    } else {
+      scrimClass = 'scrim-bottom';
+    }
+
+    if (!hasScrimElement) {
+      // Inject <div class="poster-scrim ${scrimClass}" data-od-id="poster-scrim"></div>
+      if (/<img\b[^>]*class=["'][^"']*poster-bleed-image[^"']*["'][^>]*>/i.test(newHtml)) {
+        newHtml = newHtml.replace(
+          /(<img\b[^>]*class=["'][^"']*poster-bleed-image[^"']*["'][^>]*>)/i,
+          `$1\n    <div class="poster-scrim ${scrimClass}" data-od-id="poster-scrim"></div>`
+        );
+      } else if (/<div\b[^>]*class=["'][^"']*hero-image-container[^"']*["'][^>]*>[\s\S]*?<img\b[^>]*>/i.test(newHtml)) {
+        newHtml = newHtml.replace(
+          /(<div\b[^>]*class=["'][^"']*hero-image-container[^"']*["'][^>]*>[\s\S]*?<img\b[^>]*>)/i,
+          `$1\n      <div class="poster-scrim ${scrimClass}" data-od-id="poster-scrim"></div>`
+        );
+      } else {
+        newHtml = newHtml.replace(
+          /(<img\b[^>]*>)/i,
+          `$1\n    <div class="poster-scrim ${scrimClass}" data-od-id="poster-scrim"></div>`
+        );
+      }
+    }
+
+    // Ensure CSS contains the scrim definitions
+    if (!newCss.includes('.poster-scrim') && !newCss.includes('.image-scrim') && !newCss.includes('.scrim-overlay')) {
+      newCss += `\n/* Directional Dark Scrim Safety Net: text position == dark effect position */
+.poster-scrim, .image-scrim, .scrim-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.scrim-bottom {
+  background: linear-gradient(180deg, rgba(5, 7, 10, 0.25) 0%, rgba(5, 7, 10, 0.1) 35%, rgba(5, 7, 10, 0.75) 65%, rgba(5, 7, 10, 0.98) 100%);
+}
+.scrim-top {
+  background: linear-gradient(180deg, rgba(5, 7, 10, 0.98) 0%, rgba(5, 7, 10, 0.75) 35%, rgba(5, 7, 10, 0.1) 65%, rgba(5, 7, 10, 0) 100%);
+}
+.scrim-dual {
+  background: linear-gradient(180deg, rgba(5, 7, 10, 0.85) 0%, rgba(5, 7, 10, 0.15) 30%, rgba(5, 7, 10, 0.7) 65%, rgba(5, 7, 10, 0.98) 100%);
+}
+`;
+    }
 
     return { html: newHtml, css: newCss };
   }

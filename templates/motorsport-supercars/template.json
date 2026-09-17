@@ -1,0 +1,32 @@
+{
+  "id": "motorsport-supercars",
+  "name": "Cinematic Motorsport & Supercars Editorial",
+  "archetype": "cinematic-hero-editorial",
+  "description": "Full-bleed cinematic photography with directional dark vignette/scrim matched to text position, Roman display headline with selective accent typography, and minimal high-impact spec strip.",
+  "dimensions": {
+    "width": 1080,
+    "height": 1440,
+    "aspectRatio": "3:4"
+  },
+  "fonts": [
+    "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap"
+  ],
+  "colors": {
+    "background": "#05070A",
+    "text_light": "#F8FAFC",
+    "text_muted": "#94A3B8",
+    "accent_primary": "#EF4444",
+    "scrim_base": "rgba(5, 7, 10, 0.98)"
+  },
+  "slots": {
+    "brand_tag": "PORSCHE MOTORSPORT",
+    "model_tag": "911 GT3 RS",
+    "headline_primary": "The Art of Pure",
+    "headline_accent": "Downforce.",
+    "subtext": "Naturally aspirated 4.0-liter flat-six delivering 518 horsepower at 9,000 RPM, paired with active DRS aerodynamics derived directly from GT3 racing.",
+    "spec_1_value": "860 kg",
+    "spec_1_label": "Downforce @ 285 km/h",
+    "spec_2_value": "9,000",
+    "spec_2_label": "Max Engine RPM"
+  }
+}
