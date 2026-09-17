@@ -1,0 +1,65 @@
+{
+  "id": "bento-execution-pipeline",
+  "name": "Bento Multi-Node Execution Pipeline",
+  "archetype": "architecture-pipeline",
+  "description": "Dark luxury architecture poster featuring a full-width multi-step execution pipeline (with active status nodes and glowing connectors), a syntax-highlighted code card, a live reactive telemetry inspector card, and an editorial action footer.",
+  "dimensions": {
+    "width": 1080,
+    "height": 1440,
+    "aspectRatio": "3:4"
+  },
+  "fonts": [
+    "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+  ],
+  "colors": {
+    "background": "#080c14",
+    "card_bg": "#0f1624",
+    "card_border": "rgba(255, 255, 255, 0.08)",
+    "accent_emerald": "#10b981",
+    "accent_cyan": "#06b6d4",
+    "accent_indigo": "#6366f1",
+    "text_primary": "#ffffff",
+    "text_secondary": "#94a3b8",
+    "node_bg": "#141e30"
+  },
+  "slots": {
+    "topic_badge": "ARCHITECTURE BLUEPRINT",
+    "version": "v3.5.0",
+    "headline_main": "Reactivity Engine",
+    "headline_highlight": "Under the Hood",
+    "subtitle": "Fine-grained dependency tracking, reactive proxies, and batched microtask scheduling.",
+    "pipeline_steps": [
+      {
+        "step": "STEP 01",
+        "title": "reactive(obj)",
+        "desc": "Proxy intercepts get/set traps",
+        "status": "TRACKED"
+      },
+      {
+        "step": "STEP 02",
+        "title": "track(target, key)",
+        "desc": "Records active effect to DepSet",
+        "status": "DEPENDENCY"
+      },
+      {
+        "step": "STEP 03",
+        "title": "trigger(target, key)",
+        "desc": "Dispatches effects to scheduler",
+        "status": "DISPATCH"
+      },
+      {
+        "step": "STEP 04",
+        "title": "flushJobs()",
+        "desc": "Batched microtask execution",
+        "status": "MUTATION"
+      }
+    ],
+    "code_file": "reactivity.ts",
+    "inspector": {
+      "active_subscribers": "14 effects",
+      "latency": "0.4ms",
+      "tree_size": "3.8 KB"
+    },
+    "footer_action": "EXPLORE SOURCE &rarr;"
+  }
+}

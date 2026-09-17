@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1440, initial-scale=1.0">
+  <title>Inverted UI Telemetry Poster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <main class="poster-artboard" data-od-id="poster-root">
+    <!-- Dark Slate Ambient Glow Backdrop -->
+    <div class="poster-backdrop" data-od-id="poster-bg">
+      <div class="ambient-glow top-glow" data-od-id="top-glow"></div>
+      <div class="ambient-glow bottom-glow" data-od-id="bottom-glow"></div>
+      <div class="grid-mesh" data-od-id="grid-mesh"></div>
+    </div>
+
+    <div class="poster-content" data-od-id="poster-body">
+      <!-- 1. Top Section: Inverted High-Density Production Telemetry Window -->
+      <section class="telemetry-window" data-od-id="telemetry-window">
+        <!-- Window Title Bar & Media Controls -->
+        <header class="window-titlebar" data-od-id="window-titlebar">
+          <div class="titlebar-left" data-od-id="titlebar-left">
+            <div class="window-dots" data-od-id="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="file-chip" data-od-id="file-chip">
+              <i data-lucide="waveform" class="icon-sm"></i>
+              <span>keynote_interview_04.mp4</span>
+            </div>
+          </div>
+
+          <div class="titlebar-center" data-od-id="titlebar-center">
+            <div class="player-controls" data-od-id="player-controls">
+              <button class="ctrl-btn" aria-label="Skip Back"><i data-lucide="skip-back"></i></button>
+              <button class="ctrl-btn play-btn" aria-label="Play"><i data-lucide="play"></i></button>
+              <button class="ctrl-btn" aria-label="Skip Forward"><i data-lucide="skip-forward"></i></button>
+            </div>
+            <span class="timestamp-badge" data-od-id="time-badge">00:14.28 / 02:40.00</span>
+          </div>
+
+          <div class="titlebar-right" data-od-id="titlebar-right">
+            <span class="speed-badge" data-od-id="speed-badge">1.0x</span>
+            <div class="status-indicator-live" data-od-id="live-pill">
+              <span class="live-dot"></span>
+              <span>LIVE</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- 3-Column Telemetry Workstation Grid -->
+        <div class="telemetry-body" data-od-id="telemetry-body">
+          <!-- Column A: Detailed Word-Level Transcript Feed -->
+          <div class="telemetry-col col-transcript" data-od-id="col-transcript">
+            <div class="col-header" data-od-id="transcript-header">
+              <i data-lucide="file-text" class="icon-sm"></i>
+              <span>Real-Time Transcript</span>
+              <span class="confidence-tag">99.8% Conf</span>
+            </div>
+            
+            <div class="transcript-feed" data-od-id="transcript-feed">
+              <article class="transcript-entry" data-od-id="entry-1">
+                <div class="entry-meta">
+                  <span class="speaker-tag spk-1">SPEAKER 01</span>
+                  <span class="time-stamp">00:12.40</span>
+                </div>
+                <p class="entry-text">
+                  Our model achieves unmatched fidelity across complex acoustic environments.
+                </p>
+              </article>
+
+              <article class="transcript-entry entry-active" data-od-id="entry-2">
+                <div class="entry-meta">
+                  <span class="speaker-tag spk-2">SPEAKER 02</span>
+                  <span class="time-stamp">00:14.28</span>
+                  <span class="active-pulse"></span>
+                </div>
+                <p class="entry-text">
+                  And handles filler words <mark class="filler-tag">[um]</mark> <mark class="filler-tag">[uh]</mark> with precise timestamps in under <span class="highlight-word">120ms</span>.
+                </p>
+              </article>
+
+              <article class="transcript-entry entry-dim" data-od-id="entry-3">
+                <div class="entry-meta">
+                  <span class="speaker-tag spk-1">SPEAKER 01</span>
+                  <span class="time-stamp">00:18.05</span>
+                </div>
+                <p class="entry-text">
+                  Streaming synchronously with zero hallucination drift.
+                </p>
+              </article>
+            </div>
+          </div>
+
+          <!-- Column B: Audio Waveform with Scrubber Playhead -->
+          <div class="telemetry-col col-waveform" data-od-id="col-waveform">
+            <div class="col-header" data-od-id="waveform-header">
+              <i data-lucide="activity" class="icon-sm"></i>
+              <span>Stereo Waveform Track</span>
+              <span class="channel-tag">48kHz / 24-bit</span>
+            </div>
+
+            <div class="waveform-container" data-od-id="waveform-container">
+              <!-- Scrubber needle / playhead -->
+              <div class="scrubber-line" data-od-id="scrubber-needle">
+                <div class="scrubber-handle">00:14.28</div>
+              </div>
+
+              <!-- High-density Audio Waveform Bars -->
+              <div class="waveform-bars" data-od-id="waveform-bars">
+                <span class="bar passed" style="height: 35%;"></span>
+                <span class="bar passed" style="height: 55%;"></span>
+                <span class="bar passed" style="height: 80%;"></span>
+                <span class="bar passed" style="height: 45%;"></span>
+                <span class="bar passed" style="height: 90%;"></span>
+                <span class="bar passed" style="height: 65%;"></span>
+                <span class="bar passed" style="height: 100%;"></span>
+                <span class="bar passed" style="height: 75%;"></span>
+                <span class="bar passed" style="height: 40%;"></span>
+                <span class="bar passed" style="height: 85%;"></span>
+                <span class="bar passed" style="height: 70%;"></span>
+                <span class="bar passed" style="height: 95%;"></span>
+                <!-- Active Current Position -->
+                <span class="bar active-current" style="height: 100%;"></span>
+                <!-- Future Audio -->
+                <span class="bar future" style="height: 85%;"></span>
+                <span class="bar future" style="height: 50%;"></span>
+                <span class="bar future" style="height: 90%;"></span>
+                <span class="bar future" style="height: 60%;"></span>
+                <span class="bar future" style="height: 40%;"></span>
+                <span class="bar future" style="height: 75%;"></span>
+                <span class="bar future" style="height: 90%;"></span>
+                <span class="bar future" style="height: 45%;"></span>
+                <span class="bar future" style="height: 65%;"></span>
+                <span class="bar future" style="height: 30%;"></span>
+                <span class="bar future" style="height: 55%;"></span>
+              </div>
+
+              <!-- Frequency & DB scale lines -->
+              <div class="db-scale" data-od-id="db-scale">
+                <span>0 dB</span>
+                <span>-6 dB</span>
+                <span>-18 dB</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column C: Filmstrip Keyframes & Telemetry Gauges -->
+          <div class="telemetry-col col-filmstrip" data-od-id="col-filmstrip">
+            <div class="col-header" data-od-id="filmstrip-header">
+              <i data-lucide="video" class="icon-sm"></i>
+              <span>Keyframe Track</span>
+            </div>
+
+            <div class="filmstrip-track" data-od-id="filmstrip-track">
+              <div class="frame-card" data-od-id="frame-1">
+                <div class="frame-canvas canvas-1">
+                  <div class="speaker-avatar">A</div>
+                  <span class="frame-timestamp">00:10</span>
+                </div>
+              </div>
+              <div class="frame-card frame-current" data-od-id="frame-2">
+                <div class="frame-canvas canvas-2">
+                  <div class="speaker-avatar spk-active">B</div>
+                  <span class="frame-timestamp">00:14</span>
+                </div>
+                <div class="frame-badge">CURRENT</div>
+              </div>
+              <div class="frame-card" data-od-id="frame-3">
+                <div class="frame-canvas canvas-3">
+                  <div class="speaker-avatar">A</div>
+                  <span class="frame-timestamp">00:18</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mini Telemetry Meter -->
+            <div class="telemetry-meter" data-od-id="telemetry-meter">
+              <div class="meter-row">
+                <span class="meter-label">Latency</span>
+                <span class="meter-val text-cyan">120 ms</span>
+              </div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill fill-cyan" style="width: 22%;"></div>
+              </div>
+              <div class="meter-row mt-2">
+                <span class="meter-label">Real-Time Factor</span>
+                <span class="meter-val text-emerald">90x</span>
+              </div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill fill-emerald" style="width: 90%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Bottom Section: Massive Editorial Display Typography & Announcement -->
+      <section class="poster-announcement" data-od-id="poster-announcement">
+        <div class="announcement-header" data-od-id="announcement-header">
+          <div class="category-badge" data-od-id="category-badge">
+            <span class="badge-dot"></span>
+            <span>FOUNDATION MODEL RELEASE</span>
+          </div>
+        </div>
+
+        <h1 class="hero-headline" data-od-id="hero-headline">
+          <span class="headline-lead" data-od-id="headline-lead">Meet Scribe:</span>
+          <span class="headline-main" data-od-id="headline-main">
+            the most accurate <span class="text-gradient">speech-to-text</span> model.
+          </span>
+        </h1>
+
+        <p class="hero-description" data-od-id="hero-description">
+          Engineered for production workloads with word-level timestamps, automated speaker diarization, filler word detection, and zero acoustic hallucination.
+        </p>
+
+        <!-- KPI Metrics Grid Strip -->
+        <div class="metrics-strip" data-od-id="metrics-strip">
+          <div class="metric-card" data-od-id="metric-1">
+            <span class="metric-number">90x</span>
+            <span class="metric-label">Faster Than Real-Time</span>
+          </div>
+          <div class="metric-card" data-od-id="metric-2">
+            <span class="metric-number">120<small>ms</small></span>
+            <span class="metric-label">End-to-End Latency</span>
+          </div>
+          <div class="metric-card" data-od-id="metric-3">
+            <span class="metric-number">2.8<small>%</small></span>
+            <span class="metric-label">Word Error Rate (WER)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Anchored Contextual Status Footer (No Empty Voids, No Robotic Slop) -->
+      <footer class="telemetry-footer" data-od-id="telemetry-footer">
+        <div class="footer-status" data-od-id="footer-status">
+          <span class="status-dot-pulse"></span>
+          <span class="status-text">Transcribing stream at 90x real-time</span>
+        </div>
+        <div class="footer-actions" data-od-id="footer-actions">
+          <span class="footer-chip">API v2.4-turbo</span>
+          <span class="footer-action-link">EXPLORE SCRIBE &rarr;</span>
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>

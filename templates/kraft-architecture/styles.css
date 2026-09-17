@@ -1,0 +1,319 @@
+/* ==============================================================================
+   KRAFT EDITORIAL ARCHITECTURE POSTER STYLESHEET
+   Canonical Dimensions: 1080px x 1440px
+   ============================================================================== */
+
+:root {
+  --bg-kraft: #d8bc98;
+  --bg-grain: #c8aa84;
+  --text-primary: #181513;
+  --text-secondary: #423933;
+  --accent-terracotta: #c8522c;
+  --accent-tape: #141416;
+  --terminal-bg: #11141a;
+  --terminal-bar: #1a1e27;
+  --node-bg: #1a202c;
+  --node-border: #38bdf8;
+  --font-display: 'Syne', -apple-system, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Inter', -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 1080px !important;
+  height: 1440px !important;
+  overflow: hidden !important;
+  background: var(--bg-kraft);
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 1. ARTBOARD ROOT & TACTILE PAPER BACKDROP */
+.poster-artboard {
+  width: 1080px;
+  height: 1440px;
+  padding: 60px 64px 48px 64px;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-kraft);
+}
+
+.poster-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.paper-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.25;
+  background-image: radial-gradient(#6b5437 1px, transparent 0);
+  background-size: 16px 16px;
+}
+
+.paper-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 60%, rgba(94, 69, 43, 0.2) 100%);
+}
+
+.poster-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+  position: relative;
+  z-index: 10;
+}
+
+/* 2. TOPBAR */
+.editorial-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: -0.01em;
+}
+
+.topbar-slide {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+/* 3. HERO SECTION */
+.poster-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.tape-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-tape);
+  color: #f8fafc;
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  padding: 10px 24px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+  transform: rotate(-1deg);
+  margin-bottom: 24px;
+}
+
+.poster-headline {
+  font-family: var(--font-display);
+  font-size: 88px;
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.headline-sans {
+  text-transform: uppercase;
+}
+
+.headline-serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-style: italic;
+  font-size: 96px;
+  color: var(--accent-terracotta);
+  text-transform: none;
+  margin-top: -8px;
+  letter-spacing: -0.02em;
+}
+
+.poster-subtext {
+  font-size: 26px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  max-width: 820px;
+  margin-bottom: 20px;
+}
+
+.poster-subtext strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.drawn-indicator {
+  margin-top: 4px;
+  animation: pulseArrow 2.5s infinite ease-in-out;
+}
+
+@keyframes pulseArrow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+/* 4. TERMINAL CONTAINER & FROSTED TAPE */
+.terminal-container {
+  position: relative;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.frosted-tape {
+  position: absolute;
+  width: 105px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.48);
+  backdrop-filter: blur(5px);
+  z-index: 20;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+}
+
+.tape-top-left {
+  top: -14px;
+  left: 36px;
+  transform: rotate(-18deg);
+}
+
+.tape-top-right {
+  top: -14px;
+  right: 36px;
+  transform: rotate(16deg);
+}
+
+.terminal-card {
+  background: var(--terminal-bg);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(24, 18, 12, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.terminal-bar {
+  background: var(--terminal-bar);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.window-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.dot-red { background: #ef4444; }
+.dot-yellow { background: #eab308; }
+.dot-green { background: #22c55e; }
+
+.terminal-filename {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: #94a3b8;
+}
+
+.terminal-spacer {
+  width: 58px;
+}
+
+.terminal-canvas {
+  padding: 56px 40px 48px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.flow-pipeline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.flow-node {
+  padding: 18px 30px;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 600;
+  color: #f8fafc;
+  background: var(--node-bg);
+  border: 2px solid #3b82f6;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.node-start { border-color: #38bdf8; color: #bae6fd; }
+.node-agent { border-color: #818cf8; background: #1e1b4b; color: #c7d2fe; }
+.node-tools { border-color: #34d399; background: #064e3b; color: #a7f3d0; }
+.node-end   { border-color: #a855f7; color: #e9d5ff; }
+
+.flow-connector {
+  display: flex;
+  align-items: center;
+}
+
+.return-loop {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* 5. EDITORIAL FOOTER */
+.editorial-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 18px;
+  margin-top: 12px;
+}
+
+.footer-left {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.footer-right {
+  font-family: var(--font-body);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

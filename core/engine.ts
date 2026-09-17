@@ -239,4 +239,16 @@ export class StandaloneDesignEngine implements DesignEngine {
   getProviderDiagnostics() {
     return this.providerManager.getPoolDiagnostics();
   }
+
+  getPosterTemplates() {
+    return this.posterEngine.getTemplateRegistry().listTemplates();
+  }
+
+  applyPosterTemplate(projectId: string, templateId: string, overrides: Record<string, string> = {}): boolean {
+    const success = this.posterEngine.applyTemplate(projectId, templateId, overrides);
+    if (success) {
+      this.previewServer.notifyReload();
+    }
+    return success;
+  }
 }

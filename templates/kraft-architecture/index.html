@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1440, initial-scale=1.0">
+  <title>Kraft Architecture Poster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Syne:wght@800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <main class="poster-artboard" data-od-id="poster-root">
+    <!-- Tactile Kraft Paper Background Texture -->
+    <div class="poster-backdrop" data-od-id="poster-bg">
+      <div class="paper-grain" data-od-id="paper-grain"></div>
+      <div class="paper-vignette" data-od-id="paper-vignette"></div>
+    </div>
+
+    <div class="poster-content" data-od-id="poster-body">
+      <!-- 1. Quiet Top Editorial Header -->
+      <nav class="editorial-topbar" data-od-id="editorial-topbar">
+        <span class="topbar-handle" data-od-id="topbar-handle">@fullstackparody</span>
+        <span class="topbar-slide" data-od-id="topbar-slide">01</span>
+      </nav>
+
+      <!-- 2. Hero Section with Dual-Typeface Headline -->
+      <header class="poster-hero" data-od-id="poster-hero">
+        <!-- Distressed Black Tape Badge -->
+        <div class="tape-badge" data-od-id="tape-badge">
+          <span>TUTORIAL</span>
+        </div>
+
+        <h1 class="poster-headline" data-od-id="poster-headline">
+          <span class="headline-sans" data-od-id="headline-sans">LangGraph</span>
+          <span class="headline-serif" data-od-id="headline-serif">setup guide.</span>
+        </h1>
+
+        <p class="poster-subtext" data-od-id="poster-subtext">
+          State is a <strong>typed dictionary</strong> passed between nodes. The complete architecture for building resilient, cyclic multi-agent applications.
+        </p>
+
+        <!-- Hand-Drawn Burnt-Orange Downward Arrow -->
+        <div class="drawn-indicator" data-od-id="drawn-arrow">
+          <svg width="44" height="48" viewBox="0 0 44 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 4V40M22 40L10 28M22 40L34 28" stroke="#C8522C" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </header>
+
+      <!-- 3. Taped Dark Terminal Window with Architecture Node Graph -->
+      <section class="terminal-container" data-od-id="terminal-container">
+        <!-- Masking Tape Strips on Corners -->
+        <div class="frosted-tape tape-top-left" data-od-id="tape-tl"></div>
+        <div class="frosted-tape tape-top-right" data-od-id="tape-tr"></div>
+
+        <div class="terminal-card" data-od-id="terminal-card">
+          <!-- Terminal Title Bar -->
+          <div class="terminal-bar" data-od-id="terminal-bar">
+            <div class="window-dots" data-od-id="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="terminal-filename" data-od-id="terminal-filename">langgraph.py</span>
+            <div class="terminal-spacer"></div>
+          </div>
+
+          <!-- Architecture Node Graph Visual -->
+          <div class="terminal-canvas" data-od-id="terminal-canvas">
+            <div class="flow-pipeline" data-od-id="flow-pipeline">
+              <div class="flow-node node-start" data-od-id="node-start">
+                <span>START</span>
+              </div>
+              <div class="flow-connector" data-od-id="conn-1">
+                <svg width="32" height="16" viewBox="0 0 32 16" fill="none">
+                  <path d="M0 8H28M28 8L20 2M28 8L20 14" stroke="#64748B" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="flow-node node-agent" data-od-id="node-agent">
+                <span>agent</span>
+              </div>
+              <div class="flow-connector" data-od-id="conn-2">
+                <svg width="32" height="16" viewBox="0 0 32 16" fill="none">
+                  <path d="M0 8H28M28 8L20 2M28 8L20 14" stroke="#64748B" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="flow-node node-tools" data-od-id="node-tools">
+                <span>tools</span>
+              </div>
+              <div class="flow-connector" data-od-id="conn-3">
+                <svg width="32" height="16" viewBox="0 0 32 16" fill="none">
+                  <path d="M0 8H28M28 8L20 2M28 8L20 14" stroke="#64748B" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="flow-node node-end" data-od-id="node-end">
+                <span>END</span>
+              </div>
+            </div>
+
+            <!-- Curved Return Loop (Tools -> Agent) -->
+            <div class="return-loop" data-od-id="return-loop">
+              <svg width="420" height="70" viewBox="0 0 420 70" fill="none">
+                <path d="M330 4C330 48 100 48 100 4" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="5 5" fill="none"/>
+                <path d="M100 8L95 18H105L100 8Z" fill="#94A3B8"/>
+                <text x="175" y="62" fill="#E2E8F0" font-family="'JetBrains Mono', monospace" font-size="14" letter-spacing="0.5">loop on tool call</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Purposeful Editorial Footer (Directional Action) -->
+      <footer class="editorial-footer" data-od-id="editorial-footer">
+        <div class="footer-left" data-od-id="footer-left">
+          <span class="footer-topic">AI Tooling Decoded</span>
+        </div>
+        <div class="footer-right" data-od-id="footer-right">
+          <span class="footer-swipe">SWIPE &rarr;</span>
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    if (window.lucide) { lucide.createIcons(); }
+  </script>
+</body>
+</html>

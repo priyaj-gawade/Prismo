@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1440, initial-scale=1.0">
+  <title>Bento Execution Pipeline Poster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <main class="poster-artboard" data-od-id="poster-root">
+    <!-- Dark Luxury Ambient Backdrop -->
+    <div class="poster-backdrop" data-od-id="poster-bg">
+      <div class="glow-orb orb-emerald" data-od-id="glow-emerald"></div>
+      <div class="glow-orb orb-indigo" data-od-id="glow-indigo"></div>
+      <div class="bg-grid-lines" data-od-id="bg-grid"></div>
+    </div>
+
+    <div class="poster-content" data-od-id="poster-body">
+      <!-- 1. Quiet Editorial Header Bar -->
+      <nav class="editorial-nav" data-od-id="editorial-nav">
+        <div class="nav-left" data-od-id="nav-left">
+          <div class="nav-badge" data-od-id="nav-badge">
+            <span class="pulse-emerald"></span>
+            <span>ARCHITECTURE BLUEPRINT</span>
+          </div>
+          <span class="nav-version" data-od-id="nav-version">v3.5.0 STABLE</span>
+        </div>
+        <div class="nav-right" data-od-id="nav-right">
+          <span class="nav-slide" data-od-id="nav-slide">01 / 04</span>
+        </div>
+      </nav>
+
+      <!-- 2. Hero Section: High-Contrast Headline & Subheading -->
+      <header class="poster-hero" data-od-id="poster-hero">
+        <h1 class="poster-headline" data-od-id="poster-headline">
+          <span class="headline-primary" data-od-id="headline-primary">Vue.js Reactivity</span>
+          <span class="headline-accent" data-od-id="headline-accent">Under the Hood</span>
+        </h1>
+        <p class="poster-subtext" data-od-id="poster-subtext">
+          Fine-grained dependency tracking, reactive ES6 proxies, and batched microtask queue dispatch explained in 4 execution stages.
+        </p>
+      </header>
+
+      <!-- 3. Asymmetric Bento Execution Grid -->
+      <section class="bento-grid" data-od-id="bento-grid">
+        <!-- Top Full-Width Card: Multi-Step Execution Pipeline (Span 12) -->
+        <article class="bento-card card-pipeline" data-od-id="card-pipeline">
+          <div class="card-titlebar" data-od-id="pipeline-titlebar">
+            <div class="title-with-icon" data-od-id="title-group-1">
+              <i data-lucide="git-merge" class="icon-accent"></i>
+              <span class="card-title">Runtime Dependency Pipeline</span>
+            </div>
+            <span class="chip-status" data-od-id="chip-scheduler">REAL-TIME SCHEDULER</span>
+          </div>
+
+          <div class="pipeline-container" data-od-id="pipeline-container">
+            <div class="steps-row" data-od-id="steps-row">
+              <!-- Step 1 -->
+              <div class="pipeline-step step-active" data-od-id="step-1">
+                <div class="step-badge">STEP 01</div>
+                <h2 class="step-name">reactive(obj)</h2>
+                <p class="step-desc">Proxy traps intercept get &amp; set operations</p>
+                <div class="step-tag tag-emerald">INITIALIZED</div>
+              </div>
+
+              <!-- Connector 1 -->
+              <div class="pipeline-arrow" data-od-id="arrow-1">
+                <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
+                  <path d="M0 10H24M24 10L16 3M24 10L16 17" stroke="#34d399" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+
+              <!-- Step 2 -->
+              <div class="pipeline-step" data-od-id="step-2">
+                <div class="step-badge">STEP 02</div>
+                <h2 class="step-name">track(target, key)</h2>
+                <p class="step-desc">Subscribes active effect to target's DepSet</p>
+                <div class="step-tag tag-cyan">DEP GRAPH</div>
+              </div>
+
+              <!-- Connector 2 -->
+              <div class="pipeline-arrow" data-od-id="arrow-2">
+                <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
+                  <path d="M0 10H24M24 10L16 3M24 10L16 17" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+
+              <!-- Step 3 -->
+              <div class="pipeline-step" data-od-id="step-3">
+                <div class="step-badge">STEP 03</div>
+                <h2 class="step-name">trigger(target, key)</h2>
+                <p class="step-desc">Dispatches dirty dependencies to scheduler</p>
+                <div class="step-tag tag-indigo">DISPATCH</div>
+              </div>
+
+              <!-- Connector 3 -->
+              <div class="pipeline-arrow" data-od-id="arrow-3">
+                <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
+                  <path d="M0 10H24M24 10L16 3M24 10L16 17" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+
+              <!-- Step 4 -->
+              <div class="pipeline-step" data-od-id="step-4">
+                <div class="step-badge">STEP 04</div>
+                <h2 class="step-name">flushJobs()</h2>
+                <p class="step-desc">Batched Promise.then microtask queue execution</p>
+                <div class="step-tag tag-purple">MUTATION</div>
+              </div>
+            </div>
+
+            <!-- Loopback Return Curve -->
+            <div class="pipeline-loopback" data-od-id="pipeline-loopback">
+              <svg width="100%" height="40" viewBox="0 0 880 40" fill="none">
+                <path d="M680 8C680 32 440 32 440 8" stroke="#475569" stroke-width="2" stroke-dasharray="4 4"/>
+                <polygon points="440,8 436,18 444,18" fill="#475569"/>
+                <text x="510" y="34" fill="#94a3b8" font-family="'JetBrains Mono', monospace" font-size="12">cyclic effect re-trigger</text>
+              </svg>
+            </div>
+          </div>
+        </article>
+
+        <!-- Bottom Left Card: Syntax Highlighted Code Terminal (Span 7) -->
+        <article class="bento-card card-code" data-od-id="card-code">
+          <div class="card-titlebar" data-od-id="code-titlebar">
+            <div class="title-with-dots" data-od-id="code-dots-group">
+              <div class="window-dots">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <span class="card-title filename">reactivity.ts</span>
+            </div>
+            <span class="chip-lang" data-od-id="chip-ts">TypeScript</span>
+          </div>
+
+          <div class="code-editor" data-od-id="code-editor">
+            <pre class="code-lines"><code><span class="line"><span class="ln">01</span>  <span class="kw">export function</span> <span class="fn">reactive</span>&lt;<span class="type">T</span>&gt;(<span class="param">target</span>: <span class="type">T</span>): <span class="type">T</span> {</span>
+<span class="line"><span class="ln">02</span>    <span class="kw">return new</span> <span class="class">Proxy</span>(target, {</span>
+<span class="line"><span class="ln">03</span>      <span class="fn">get</span>(obj, key, receiver) {</span>
+<span class="line"><span class="ln">04</span>        <span class="fn">track</span>(obj, key); <span class="cm">// Capture active effect</span></span>
+<span class="line"><span class="ln">05</span>        <span class="kw">return</span> <span class="class">Reflect</span>.<span class="fn">get</span>(obj, key, receiver);</span>
+<span class="line"><span class="ln">06</span>      },</span>
+<span class="line"><span class="ln">07</span>      <span class="fn">set</span>(obj, key, val, receiver) {</span>
+<span class="line"><span class="ln">08</span>        <span class="kw">const</span> res = <span class="class">Reflect</span>.<span class="fn">set</span>(obj, key, val, receiver);</span>
+<span class="line"><span class="ln">09</span>        <span class="fn">trigger</span>(obj, key); <span class="cm">// Dispatch subscribers</span></span>
+<span class="line"><span class="ln">10</span>        <span class="kw">return</span> res;</span>
+<span class="line"><span class="ln">11</span>      }</span>
+<span class="line"><span class="ln">12</span>    });</span>
+<span class="line"><span class="ln">13</span>  }</span></code></pre>
+          </div>
+        </article>
+
+        <!-- Bottom Right Card: State & DepSet Inspector (Span 5) -->
+        <article class="bento-card card-inspector" data-od-id="card-inspector">
+          <div class="card-titlebar" data-od-id="inspector-titlebar">
+            <div class="title-with-icon" data-od-id="title-group-2">
+              <i data-lucide="cpu" class="icon-accent"></i>
+              <span class="card-title">Scheduler Telemetry</span>
+            </div>
+            <span class="badge-live-pulse" data-od-id="live-telemetry">LIVE</span>
+          </div>
+
+          <div class="inspector-content" data-od-id="inspector-content">
+            <!-- TargetMap Tree Entry -->
+            <div class="state-row" data-od-id="state-row-1">
+              <span class="state-key">targetMap:</span>
+              <span class="state-val">WeakMap(12)</span>
+            </div>
+            <div class="state-sub-row" data-od-id="state-sub-1">
+              <span class="tree-bullet">↳</span>
+              <span class="sub-key">activeEffect:</span>
+              <span class="sub-val text-emerald">renderComponent()</span>
+            </div>
+            <div class="state-sub-row" data-od-id="state-sub-2">
+              <span class="tree-bullet">↳</span>
+              <span class="sub-key">dirtyQueue:</span>
+              <span class="sub-val text-cyan">[job_01, job_04]</span>
+            </div>
+
+            <!-- Metrics Gauges -->
+            <div class="inspector-metrics" data-od-id="inspector-metrics">
+              <div class="metric-box" data-od-id="metric-latency">
+                <span class="metric-value text-emerald">0.4<small>ms</small></span>
+                <span class="metric-caption">Flush Latency</span>
+              </div>
+              <div class="metric-box" data-od-id="metric-size">
+                <span class="metric-value text-cyan">3.8<small>KB</small></span>
+                <span class="metric-caption">Runtime Core</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- 4. Anchored Editorial Footer -->
+      <footer class="editorial-footer" data-od-id="editorial-footer">
+        <div class="footer-left" data-od-id="footer-left">
+          <span class="footer-repo">vuejs/core &middot; reactivity internals</span>
+        </div>
+        <div class="footer-right" data-od-id="footer-right">
+          <span class="footer-cta">EXPLORE ARCHITECTURE &rarr;</span>
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "id": "ui-telemetry-inverted",
+  "name": "Inverted UI-First Telemetry & Waveform",
+  "archetype": "ui-telemetry",
+  "description": "Inverted layout with high-density production UI on top (audio waveform with scrubber playhead, word-level timestamp transcript, filmstrip keyframe track) and massive display typography on bottom with live status bar.",
+  "dimensions": {
+    "width": 1080,
+    "height": 1440,
+    "aspectRatio": "3:4"
+  },
+  "fonts": [
+    "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+  ],
+  "colors": {
+    "background": "#0b0d13",
+    "card_bg": "#121620",
+    "card_border": "rgba(255, 255, 255, 0.08)",
+    "accent_cyan": "#00f0ff",
+    "accent_coral": "#ff4d4d",
+    "text_primary": "#ffffff",
+    "text_secondary": "#94a3b8",
+    "text_dim": "#64748b",
+    "waveform_active": "#38bdf8",
+    "waveform_inactive": "#1e293b",
+    "scrubber_red": "#ef4444"
+  },
+  "slots": {
+    "category_badge": "MODEL RELEASE",
+    "headline_intro": "Meet Scribe:",
+    "headline_body": "the most accurate speech-to-text model",
+    "subtitle": "Word-level timestamps, speaker diarization, and unmatched acoustic fidelity.",
+    "status_chip": "Transcribing... 🎬",
+    "metrics": {
+      "speed": "90x real-time",
+      "latency": "120ms",
+      "wer": "2.8% WER"
+    },
+    "ui_header": {
+      "file_name": "keynote_interview_04.mp4",
+      "duration": "00:14.28 / 02:40.00",
+      "speed": "1.0x"
+    },
+    "transcript": [
+      {
+        "time": "00:12.40",
+        "speaker": "SPEAKER 01",
+        "words": "Our model achieves unmatched fidelity across complex acoustic environments."
+      },
+      {
+        "time": "00:14.28",
+        "speaker": "SPEAKER 02",
+        "words": "And handles filler words [um] [uh] with precise timestamps.",
+        "active": true
+      }
+    ]
+  }
+}

@@ -9,6 +9,7 @@ import { FilesystemDiffEngine } from '../workspace/diff.ts';
 import { VersioningEngine } from '../workspace/versioning.ts';
 import { SkillRegistry } from '../skills/registry.ts';
 import { ArtifactValidator } from '../validation/validator.ts';
+import { PosterTemplateRegistry } from '../templates/posters.ts';
 
 export class PosterEngine {
   private workspaceManager: WorkspaceManager;
@@ -19,6 +20,8 @@ export class PosterEngine {
   private diffEngine: FilesystemDiffEngine;
   private versioning: VersioningEngine;
   private skillRegistry: SkillRegistry;
+  private templateRegistry: PosterTemplateRegistry;
+  private validator: ArtifactValidator;
 
   constructor(dependencies: {
     workspaceManager: WorkspaceManager;
@@ -35,10 +38,9 @@ export class PosterEngine {
     this.diffEngine = new FilesystemDiffEngine();
     this.versioning = new VersioningEngine();
     this.skillRegistry = new SkillRegistry();
+    this.templateRegistry = new PosterTemplateRegistry();
     this.validator = new ArtifactValidator();
   }
-
-  private validator: ArtifactValidator;
 
   async generate(input: GenerationInput): Promise<GenerationResult> {
     const startTime = Date.now();
@@ -147,11 +149,14 @@ Ensure you output BOTH:
     const designMd = this.workspaceManager.readFile(input.projectId, 'DESIGN.md') || undefined;
     const tokensCss = this.workspaceManager.readFile(input.projectId, 'tokens.css') || undefined;
 
+    const templateGroundedContext = this.templateRegistry.formatGroundedContext(input.prompt);
+
     const composed = this.promptComposer.compose({
       persistentMemory: activeMemory,
       projectInstructions: `Strict 3:4 Canvas Dimensions: ${width}x${height}`,
       designMd,
       tokensCss,
+      templateGroundedContext,
       skill,
       userPrompt: posterPrompt
     });
@@ -404,20 +409,20 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
 
   /**
    * Deterministically removes AI-slop header pills, edition numbers, EST dates,
-   * verification seals, and footer specs from generated poster HTML.
+   * verification seals, and robotic footer specs from generated poster HTML.
+   * Preserves intentional editorial/directional footers (.editorial-footer, .telemetry-footer).
    */
   private sanitizePosterHtml(html: string): string {
     let clean = html;
 
-    // 1. Remove entire <header class="poster-header">...</header> or <div class="poster-header">...</div>
+    // 1. Remove old AI-slop header (fake edition, date, pills)
     clean = clean.replace(/<(?:header|div)\s+class="[^"]*\bposter-header\b[^"]*"[^>]*>[\s\S]*?<\/(?:header|div)>/gi, '');
 
-    // 2. Remove entire <footer...>...</footer> or <div class="poster-footer">...</div>
-    clean = clean.replace(/<footer\b[^>]*>[\s\S]*?<\/footer>/gi, '');
-    clean = clean.replace(/<div\s+class="[^"]*\bposter-footer\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+    // 2. Remove old AI-slop footer classes (spec telemetry, fake URLs, archival edition seals)
+    clean = clean.replace(/<(?:footer|div)\s+class="[^"]*\bposter-footer\b[^"]*"[^>]*>[\s\S]*?<\/(?:footer|div)>/gi, '');
     clean = clean.replace(/<div\s+class="[^"]*\bfooter-(?:badge-seal|brand-info|specs)\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
 
-    // 3. Remove standalone top badge containers, edition pills, or meta tags outside the hero
+    // 3. Remove standalone top badge containers, edition pills, or robotic meta tags outside the hero
     clean = clean.replace(/<div\s+class="[^"]*\bbadge-container\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
     clean = clean.replace(/<div\s+class="[^"]*\bheader-meta\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
     clean = clean.replace(/<span\s+class="[^"]*\bposter-badge\b[^"]*"[^>]*>[\s\S]*?<\/span>/gi, '');
@@ -429,7 +434,7 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
   }
 
   /**
-   * Deterministically removes CSS rules targeting stripped header/footer elements.
+   * Deterministically removes CSS rules targeting stripped AI-slop header/footer elements.
    */
   private sanitizePosterCss(css: string): string {
     let clean = css;
@@ -437,7 +442,19 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
     clean = clean.replace(/\.poster-footer\s*\{[\s\S]*?\}/gi, '');
     clean = clean.replace(/\.header-meta\s*\{[\s\S]*?\}/gi, '');
     clean = clean.replace(/\.badge-container\s*\{[\s\S]*?\}/gi, '');
-    clean = clean.replace(/\.footer-[a-zA-Z0-9_-]+\s*\{[\s\S]*?\}/gi, '');
+    clean = clean.replace(/\.footer-(?:badge-seal|brand-info|specs)\s*\{[\s\S]*?\}/gi, '');
     return clean;
+  }
+
+  public getTemplateRegistry(): PosterTemplateRegistry {
+    return this.templateRegistry;
+  }
+
+  public applyTemplate(projectId: string, templateId: string, overrides: Record<string, string> = {}): boolean {
+    const rendered = this.templateRegistry.renderWithSlots(templateId, overrides);
+    if (!rendered) return false;
+    this.workspaceManager.writeFile(projectId, 'index.html', rendered.html);
+    this.workspaceManager.writeFile(projectId, 'styles.css', rendered.css);
+    return true;
   }
 }

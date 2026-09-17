@@ -1,0 +1,34 @@
+{
+  "id": "kraft-architecture",
+  "name": "Kraft Paper Editorial & Architecture Pipeline",
+  "archetype": "architecture-pipeline",
+  "description": "Tactile kraft paper background, black tape badge, dual brutalist sans + italic serif headline, taped terminal window with architecture node flow or syntax-highlighted code, hand-drawn annotations, and directional SWIPE footer.",
+  "dimensions": {
+    "width": 1080,
+    "height": 1440,
+    "aspectRatio": "3:4"
+  },
+  "fonts": [
+    "https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap"
+  ],
+  "colors": {
+    "background": "#d8bc98",
+    "background_grain": "#cbaf89",
+    "text_dark": "#1a1614",
+    "text_muted": "#4a423d",
+    "accent_terracotta": "#c8522c",
+    "accent_tape": "#181818",
+    "card_dark": "#191b21",
+    "node_border": "#3b82f6"
+  },
+  "slots": {
+    "handle": "@fullstackparody",
+    "slide_index": "01",
+    "tape_badge": "TUTORIAL",
+    "headline_sans": "LangGraph",
+    "headline_serif": "Setup Guide",
+    "subtitle": "The complete stateful multi-agent orchestration architecture.",
+    "terminal_filename": "graph.py",
+    "footer_action": "SWIPE →"
+  }
+}
