@@ -13,10 +13,11 @@ Design a standalone, high-impact graphic poster rendered as a fixed 3:4 visual a
 - **Edge-to-Edge Rule**: The document MUST NOT have any outer canvas margins, padding, or centering letterbox backgrounds on `body`. The artboard fills the entire 1080x1440 canvas edge-to-edge.
 - **Safe-Zone Boundary Rule**: `.poster-artboard` MUST have `padding: 64px 60px; box-sizing: border-box; overflow: hidden;`. All text, headings, and cards must remain safely inside without touching outer borders.
 
-## Strict Structural Rules (No Header Pills, No Footer Bars)
-1. **NO TOP HEADER PILLS OR METADATA**: Do NOT create top badge pills (e.g. "SYS.DOC // 02", "PROGRAMMING EXCELLENCE", date tags, or edition badges). The poster begins immediately with the prominent headline/hero.
-2. **NO FOOTER SPEC BARS**: Do NOT generate bottom telemetry bars, edition stamps, or brand spec footers (e.g. "ENGINE LAB", "1080 × 1440 EXACT ARTBOARD", "#AI_ENGINEERING").
-3. **FULL VERTICAL DENSITY**: The entire 1440px height must be purposefully distributed between the hero headline (~25-30%) and dynamic content bento grid (~70-75%). Never leave large empty black voids.
+## Strict Structural Rules (ZERO AI SLOP METADATA)
+1. **NO TOP HEADER PILLS OR METADATA**: Do NOT create top badge pills (e.g. "ARCHIVAL EDITION N° 042", "SYS.DOC // 02", "PROGRAMMING EXCELLENCE", "EST. 1974", "FELINE ARCHIVES", date tags, or edition badges). The poster begins immediately with the prominent headline/hero.
+2. **NO FOOTER SPEC BARS OR FAKE URLS**: Do NOT generate bottom telemetry bars, edition stamps, verification seals ("VERIFIED TRUTHS"), fake domain names ("RETROCATS.ORG"), or brand spec footers (e.g. "ENGINE LAB", "1080 × 1440 EXACT ARTBOARD", "#AI_ENGINEERING").
+3. **NO TOP/BOTTOM DIVIDER LINES**: Do NOT place horizontal `<hr>` or top/bottom border separator lines above the headline or below the content grid.
+4. **FULL VERTICAL DENSITY**: The entire 1440px height must be purposefully distributed between the hero headline (~25-30%) and dynamic content bento grid (~70-75%). Never leave large empty black voids.
 
 ## Mandatory Typography & Readability Scale
 To ensure crystal-clear readability on mobile devices and high-res displays:

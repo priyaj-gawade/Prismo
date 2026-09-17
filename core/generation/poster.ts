@@ -367,6 +367,9 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
         cleanHtml = cleanHtml.slice(cleanHtml.indexOf('<html'));
       }
 
+      // Deterministically strip AI slop header/footer metadata
+      cleanHtml = this.sanitizePosterHtml(cleanHtml);
+
       if (cleanHtml.includes('data-lucide')) {
         if (!cleanHtml.includes('lucide@latest') && !cleanHtml.includes('lucide.js') && cleanHtml.includes('</head>')) {
           cleanHtml = cleanHtml.replace('</head>', '  <script src="https://unpkg.com/lucide@latest"></script>\n</head>');
@@ -380,9 +383,50 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
     }
 
     if (files['styles.css']) {
-      files['styles.css'] = files['styles.css'].replace(/^```[a-zA-Z0-9_\-:]*\r?\n/, '').replace(/\r?\n```$/, '').trim();
+      let cleanCss = files['styles.css'].replace(/^```[a-zA-Z0-9_\-:]*\r?\n/, '').replace(/\r?\n```$/, '').trim();
+      cleanCss = this.sanitizePosterCss(cleanCss);
+      files['styles.css'] = cleanCss;
     }
 
     return files;
+  }
+
+  /**
+   * Deterministically removes AI-slop header pills, edition numbers, EST dates,
+   * verification seals, and footer specs from generated poster HTML.
+   */
+  private sanitizePosterHtml(html: string): string {
+    let clean = html;
+
+    // 1. Remove entire <header class="poster-header">...</header> or <div class="poster-header">...</div>
+    clean = clean.replace(/<(?:header|div)\s+class="[^"]*\bposter-header\b[^"]*"[^>]*>[\s\S]*?<\/(?:header|div)>/gi, '');
+
+    // 2. Remove entire <footer...>...</footer> or <div class="poster-footer">...</div>
+    clean = clean.replace(/<footer\b[^>]*>[\s\S]*?<\/footer>/gi, '');
+    clean = clean.replace(/<div\s+class="[^"]*\bposter-footer\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+    clean = clean.replace(/<div\s+class="[^"]*\bfooter-(?:badge-seal|brand-info|specs)\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+
+    // 3. Remove standalone top badge containers, edition pills, or meta tags outside the hero
+    clean = clean.replace(/<div\s+class="[^"]*\bbadge-container\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+    clean = clean.replace(/<div\s+class="[^"]*\bheader-meta\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+    clean = clean.replace(/<span\s+class="[^"]*\bposter-badge\b[^"]*"[^>]*>[\s\S]*?<\/span>/gi, '');
+
+    // 4. Remove fake divider lines at the top of content or bottom
+    clean = clean.replace(/<hr\s*\/?>/gi, '');
+
+    return clean;
+  }
+
+  /**
+   * Deterministically removes CSS rules targeting stripped header/footer elements.
+   */
+  private sanitizePosterCss(css: string): string {
+    let clean = css;
+    clean = clean.replace(/\.poster-header\s*\{[\s\S]*?\}/gi, '');
+    clean = clean.replace(/\.poster-footer\s*\{[\s\S]*?\}/gi, '');
+    clean = clean.replace(/\.header-meta\s*\{[\s\S]*?\}/gi, '');
+    clean = clean.replace(/\.badge-container\s*\{[\s\S]*?\}/gi, '');
+    clean = clean.replace(/\.footer-[a-zA-Z0-9_-]+\s*\{[\s\S]*?\}/gi, '');
+    return clean;
   }
 }
