@@ -66,10 +66,18 @@ Strict 3:4 Full-Bleed Canvas Dimensions: ${width}px x ${height}px.
 STRUCTURE & LAYOUT RULES:
 1. NO HEADER PILLS / BADGES: Do NOT generate top badge pills (e.g. "SYS.DOC // 02", "PROGRAMMING EXCELLENCE", "ARCHIVAL EDITION", "EST. 1974") or date tags. Start directly with the main headline/hero.
 2. NO FOOTER SPEC BARS: Do NOT generate bottom telemetry bars, edition labels, fake URLs, or brand spec footers.
-3. DYNAMIC BENTO GRID & TIGHT GAPS:
-   - Gaps between cards MUST be tight and consistent (gap: 20px). NEVER use space-between on .poster-grid to create huge empty gaps.
-   - Cards themselves MUST STRETCH to fill vertical space: each card child must have \`flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 28px 32px;\`.
-   - Each card must be richly detailed: (a) Lucide vector icon + tag at top, (b) Bold title (22px–26px), (c) Rich 3-4 line explanation (17px–19px), and (d) Stat pill or key takeaway badge (15px–16px).
+3. DYNAMIC VISUAL ARCHETYPE SELECTION:
+   Dynamically choose the optimal layout composition based on prompt intent:
+   - 🏗️ ARCHITECTURE & EXECUTION PIPELINES (Frameworks, APIs, Compilers, Workflows):
+     Create horizontal/multi-step flow containers with step nodes (e.g. STEP 01 effect() -> STEP 02 track() -> STEP 03 trigger()), connector arrows, runtime badges, and code syntax cards.
+   - 🍱 ASYMMETRIC BENTO GRIDS (Complex platforms, multi-feature products):
+     Use a 12-column grid combining 1 large focal card (grid-column: span 12 or span 8) with 2-3 compact feature/metric cards (grid-column: span 6 or span 4).
+   - 📊 METRIC & STAT INFOGRAPHICS (Numbers, benchmarks, research):
+     Feature large bold KPI numbers (48px–64px), progress gauges, and stat callouts.
+   - ⚖️ COMPARISON MATRICES (Left vs Right, Before vs After, Pro vs Con):
+     Split 2-column side-by-side cards with highlight tags.
+   - 📜 EDITORIAL FEATURE DECKS (Narratives, guides, facts):
+     3–4 rich feature cards spanning the grid with custom accent borders and glassmorphism.
 4. TYPOGRAPHY SCALING:
    - Main Headline: 64px–76px (bold, punchy, letter-spacing: -0.03em, word-break: break-word).
    - Subheading: 24px–28px (readable, clear line-height: 1.45).
@@ -88,7 +96,7 @@ The document MUST contain:
         <p class="poster-subtext" data-od-id="poster-subtext">Subtitle</p>
       </header>
       <section class="poster-grid" data-od-id="poster-grid">
-        <!-- High-density Bento cards, feature blocks, and architecture diagrams -->
+        <!-- Dynamic Bento cards, architecture execution pipelines, metric blocks, or feature decks -->
       </section>
     </div>
   </main>
@@ -125,18 +133,11 @@ html, body {
 }
 .poster-grid {
   flex: 1;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
   gap: 20px;
 }
-.poster-grid > * {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 28px 32px;
-  border-radius: 18px;
-}
+/* Individual cards, pipeline containers, or bento blocks should have tight uniform gap (20px) and generous internal padding (24px to 32px) */
 
 Ensure you output BOTH:
 1. \`\`\`html:index.html\`\`\`

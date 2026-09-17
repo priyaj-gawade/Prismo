@@ -66,18 +66,25 @@ To ensure crystal-clear readability on mobile devices and high-res displays:
 </html>
 ```
 
-## Dynamic Bento Grid & Card Scaling Rules (Strict Tight Gaps & High Density)
-1. **TIGHT UNIFORM GAPS**: Gaps between cards must ALWAYS be tight and consistent (`gap: 20px;` to `24px;`). NEVER use `justify-content: space-between` on `.poster-grid` to spread tiny cards across massive empty voids.
-2. **CARD STRETCHING & ROW ALLOCATION**:
-   - In a vertical card stack: Every card child MUST have `flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 28px 32px;` so that **the cards themselves expand to fill the vertical canvas**, creating a dense, tactile editorial layout.
-   - In a Bento Grid: Use `display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: 1fr; gap: 20px;` with cards spanning 6 or 12 columns.
-3. **RICH CARD CONTENT**:
-   - Each card must contain: (a) Header with vector Lucide icon + category tag, (b) Bold card title (`22px – 26px`), (c) 3-4 lines of informative, rich explanation text (`17px – 19px`), and (d) Stat pill or key takeaway badge (`15px – 16px`).
+## Dynamic Visual Archetypes (Select Based on Prompt Intent)
+The engine MUST dynamically select the optimal visual composition for the prompt:
+1. 🏗️ **Architecture & Execution Pipelines** (Frameworks, APIs, Compilers, Workflows):
+   - Design horizontal or multi-step execution flows with step containers (`STEP 01 effect() → STEP 02 track() → STEP 03 trigger()`).
+   - Include clear flow arrows (`→` or SVG indicators), runtime labels, and code syntax cards.
+2. 🍱 **Asymmetric Bento Grids** (Complex platforms, multi-feature products):
+   - 12-column CSS Grid (`display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; flex: 1;`).
+   - Combine 1 focal card (`grid-column: span 12` or `span 8`) with 2–3 compact metric/feature cards (`grid-column: span 6` or `span 4`).
+3. 📊 **Metric & Stat Infographics** (Data, benchmarks, analytics):
+   - Feature prominent large KPI numbers (48px–64px), progress gauges, and stat callouts.
+4. ⚖️ **Comparison & Dual-Column Matrices** (Before vs After, Pros vs Cons):
+   - Structured 2-column side-by-side cards with highlight tags.
+5. 📜 **Editorial Feature Stacks** (Narratives, guides, facts):
+   - 3–4 rich feature cards spanning the grid with custom accent borders and glassmorphism.
 
 ## Mandatory CSS Styling Rules
 1. `html, body` MUST have `margin: 0 !important; padding: 0 !important; width: 1080px !important; height: 1440px !important; overflow: hidden !important; background: transparent;`.
 2. `.poster-artboard` MUST have `width: 1080px; height: 1440px; margin: 0; padding: 64px 60px; position: relative; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;`.
 3. `.poster-content` MUST have `display: flex; flex-direction: column; height: 100%; gap: 28px; position: relative; z-index: 10;`.
-4. `.poster-grid` MUST have `flex: 1; display: flex; flex-direction: column; gap: 20px;` (or `display: grid; gap: 20px; flex: 1;`).
-5. `.poster-grid > *` MUST have `flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 28px 32px; border-radius: 18px;` so cards stretch to fill the height with rich internal padding and zero awkward dead space.
+4. `.poster-grid` MUST have `flex: 1; display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px;` (or dynamic flex container appropriate for the archetype).
+5. Cards, diagram nodes, and grid blocks must have tight, uniform gaps (`gap: 20px;` to `24px;`) and generous internal padding (`24px` to `32px`).
 6. Every visible container MUST have a persistent `data-od-id="..."` attribute.
