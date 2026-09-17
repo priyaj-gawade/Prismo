@@ -8,46 +8,66 @@ description: Strictly 3:4 aspect ratio visual artboard poster (1080x1440px).
 
 Design a standalone, high-impact graphic poster rendered as a fixed 3:4 visual artboard, strictly sized at 1080px by 1440px.
 
-## Mandatory Format
+## Mandatory Format & Canvas Physics
 - **Aspect Ratio**: Strictly **3:4** (width:height = 3:4). Canonical dimensions: **1080px × 1440px**.
 - **Edge-to-Edge Rule**: The document MUST NOT have any outer canvas margins, padding, or centering letterbox backgrounds on `body`. The artboard fills the entire 1080x1440 canvas edge-to-edge.
-- **Container Structure**:
-  ```html
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=1080, height=1440, initial-scale=1.0">
-    <link rel="stylesheet" href="tokens.css">
-    <link rel="stylesheet" href="styles.css">
-  </head>
-  <body>
-    <main class="poster-artboard" data-od-id="poster-root">
-      <div class="poster-backdrop" data-od-id="poster-bg"></div>
-      <div class="poster-content" data-od-id="poster-body">
-        <div class="poster-header" data-od-id="poster-header">
-          <span class="poster-badge" data-od-id="poster-badge">ISSUE 01 / ARCHITECTURE</span>
-          <span class="poster-meta" data-od-id="poster-date">2026 EDITION</span>
-        </div>
-        <div class="poster-main" data-od-id="poster-main">
-          <h1 class="poster-headline" data-od-id="poster-headline">LangGraph.</h1>
-          <p class="poster-subtext" data-od-id="poster-subtext">Stateful Multi-Agent Orchestration at Scale</p>
-        </div>
-        <div class="poster-visual" data-od-id="poster-visual">
-          <!-- Central visual, geometric composition, or graph artwork -->
-        </div>
-        <div class="poster-footer" data-od-id="poster-footer">
-          <span class="poster-brand" data-od-id="poster-brand">ENGINE LAB</span>
-          <span class="poster-specs" data-od-id="poster-specs">1080 × 1440 ARTBOARD</span>
-        </div>
-      </div>
-    </main>
-  </body>
-  </html>
-  ```
+- **Safe-Zone Boundary Rule**: `.poster-artboard` MUST have `padding: 64px 60px; box-sizing: border-box; overflow: hidden;`. All text, headings, and cards must remain safely inside without touching outer borders.
+
+## Strict Structural Rules (No Header Pills, No Footer Bars)
+1. **NO TOP HEADER PILLS OR METADATA**: Do NOT create top badge pills (e.g. "SYS.DOC // 02", "PROGRAMMING EXCELLENCE", date tags, or edition badges). The poster begins immediately with the prominent headline/hero.
+2. **NO FOOTER SPEC BARS**: Do NOT generate bottom telemetry bars, edition stamps, or brand spec footers (e.g. "ENGINE LAB", "1080 × 1440 EXACT ARTBOARD", "#AI_ENGINEERING").
+3. **FULL VERTICAL DENSITY**: The entire 1440px height must be purposefully distributed between the hero headline (~25-30%) and dynamic content bento grid (~70-75%). Never leave large empty black voids.
+
+## Mandatory Typography & Readability Scale
+To ensure crystal-clear readability on mobile devices and high-res displays:
+- **Headline (`h1`, `.poster-headline`)**: `64px – 76px` (`font-weight: 800/900; line-height: 1.1; letter-spacing: -0.03em; max-width: 950px; word-break: break-word;`).
+- **Subheading (`p`, `.poster-subtext`)**: `24px – 28px` (`line-height: 1.45; max-width: 920px; font-weight: 400/500;`).
+- **Card Headings (`h3`, `.card-title`)**: `22px – 26px` (`font-weight: 700; line-height: 1.3;`).
+- **Card Body Text**: `17px – 19px` (`line-height: 1.55;`).
+- **Diagrams, Architecture Flows, & Pipelines (e.g., VueJS / LangChain / System Diagrams)**:
+  - Node titles / step labels: `18px – 22px` (`font-weight: 700;`).
+  - Step tags / badges: `15px – 17px` (`font-weight: 600;`).
+  - Connector arrows / flow indicators: `20px – 24px` with high contrast.
+  - Sub-captions in diagrams: `16px – 18px`.
+  - **ABSOLUTE MINIMUM FONT SIZE**: NEVER use font sizes below `16px` anywhere on the poster.
+
+## Container Structure
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1440, initial-scale=1.0">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <main class="poster-artboard" data-od-id="poster-root">
+    <div class="poster-backdrop" data-od-id="poster-bg"></div>
+    <div class="poster-content" data-od-id="poster-body">
+      <!-- 1. HERO (Direct, prominent headline & subtitle) -->
+      <header class="poster-hero" data-od-id="poster-hero">
+        <h1 class="poster-headline" data-od-id="poster-headline">Headline Title</h1>
+        <p class="poster-subtext" data-od-id="poster-subtext">Clear, engaging narrative subtitle explaining the core concept.</p>
+      </header>
+
+      <!-- 2. DYNAMIC BENTO GRID & DIAGRAMS (Fills remaining vertical space) -->
+      <section class="poster-grid" data-od-id="poster-grid">
+        <!-- Feature cards, architecture flow diagrams, key metrics, and infographics -->
+      </section>
+    </div>
+  </main>
+  <script>
+    if (window.lucide) { lucide.createIcons(); }
+  </script>
+</body>
+</html>
+```
 
 ## Mandatory CSS Styling Rules
 1. `html, body` MUST have `margin: 0 !important; padding: 0 !important; width: 1080px !important; height: 1440px !important; overflow: hidden !important; background: transparent;`.
-2. `.poster-artboard` MUST have `width: 1080px; height: 1440px; margin: 0; padding: 60px 48px; position: relative; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;` with bold, rich visual composition.
-3. Typography must be bold, expressive, and tailored to the aesthetic requested (maximalism, minimalism, brutalism, editorial).
-4. Every visible container MUST have a persistent `data-od-id="..."` attribute.
+2. `.poster-artboard` MUST have `width: 1080px; height: 1440px; margin: 0; padding: 64px 60px; position: relative; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;`.
+3. `.poster-content` MUST have `display: flex; flex-direction: column; height: 100%; gap: 28px; position: relative; z-index: 10;`.
+4. `.poster-grid` MUST have `flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 24px;` so the cards and diagram blocks dynamically distribute and occupy the entire 1440px canvas height.
+5. Every visible container MUST have a persistent `data-od-id="..."` attribute.

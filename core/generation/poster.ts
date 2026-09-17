@@ -62,10 +62,32 @@ export class PosterEngine {
     const posterPrompt = `${input.prompt}
 CRITICAL POSTER REQUIREMENT:
 Strict 3:4 Full-Bleed Canvas Dimensions: ${width}px x ${height}px.
+
+STRUCTURE & LAYOUT RULES:
+1. NO HEADER PILLS / BADGES: Do NOT generate top badge pills (e.g. "SYS.DOC // 02", "PROGRAMMING EXCELLENCE") or date tags. Start directly with the main headline/hero.
+2. NO FOOTER SPEC BARS: Do NOT generate bottom telemetry bars, edition labels, or brand spec footers.
+3. FULL VERTICAL DENSITY: The hero (~25-30%) and dynamic content grid (~70-75%) MUST fill the full ${height}px height cohesively.
+4. TYPOGRAPHY SCALING:
+   - Main Headline: 64px–76px (bold, punchy, letter-spacing: -0.03em, word-break: break-word).
+   - Subheading: 24px–28px (readable, clear line-height: 1.45).
+   - Card Titles: 22px–26px (font-weight: 700).
+   - Card Body: 17px–19px (line-height: 1.55).
+   - DIAGRAMS / ARCHITECTURE FLOWS / STEP CARDS: Node titles MUST be 18px–22px, badges 15px–17px, connector arrows 20px–24px.
+   - ABSOLUTE MINIMUM FONT SIZE: NEVER use font sizes below 16px anywhere.
+
 The document MUST contain:
 <body>
   <main class="poster-artboard" data-od-id="poster-root">
-    <!-- Visual composition with bold typography, focal imagery/graphics, badges, details -->
+    <div class="poster-backdrop" data-od-id="poster-bg"></div>
+    <div class="poster-content" data-od-id="poster-body">
+      <header class="poster-hero" data-od-id="poster-hero">
+        <h1 class="poster-headline" data-od-id="poster-headline">Title</h1>
+        <p class="poster-subtext" data-od-id="poster-subtext">Subtitle</p>
+      </header>
+      <section class="poster-grid" data-od-id="poster-grid">
+        <!-- High-density Bento cards, feature blocks, and architecture diagrams -->
+      </section>
+    </div>
   </main>
 </body>
 
@@ -83,14 +105,27 @@ html, body {
   width: ${width}px;
   height: ${height}px;
   margin: 0;
-  padding: 60px 48px;
+  padding: 64px 60px;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+}
+.poster-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 32px;
+  position: relative;
+  z-index: 10;
+}
+.poster-grid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  /* Visual styling, background, typography, colors, borders dictated by user prompt and DESIGN.md */
+  gap: 24px;
 }
 
 Ensure you output BOTH:

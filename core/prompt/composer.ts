@@ -102,8 +102,8 @@ PROFESSIONAL ICONS (NO EMOJIS):
       'Never omit data-od-id attributes; they provide stable element identity for surgical section updates.',
       'ANTI-PURPLE RULE: Never use generic purple or violet backgrounds/gradients unless explicitly requested by the user.',
       'NO RAW EMOJIS: Never use emojis for UI icons, features, or buttons. Use Lucide icons (<i data-lucide="..."></i>) or SVG vector icons exclusively.',
+      'TYPOGRAPHY READABILITY RULE: In 3:4 posters and diagrams, NEVER use font sizes below 16px. Ensure all diagram node labels, steps, cards, and text are crisp and immediately readable on small devices (diagram titles >= 18px, headline >= 64px, subheading >= 24px).',
       'Mobile-first responsive styling: default layout for mobile, min-width media queries for tablet (768px) and desktop (1024px).',
-      'Mobile navigation drawers (.mobile-menu) MUST have `display: none;` by default on desktop, and only display when active or under small screen media queries.',
       'No heavy frameworks or build tools; pure browser-native standard HTML5, CSS3, and ES6 JavaScript.',
       'Always link styles.css and tokens.css in index.html head.'
     ];
