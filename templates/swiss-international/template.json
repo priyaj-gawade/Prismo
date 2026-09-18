@@ -1,0 +1,32 @@
+{
+  "id": "swiss-international",
+  "name": "Swiss International & Minimalist Luxury Editorial",
+  "archetype": "swiss-minimalist",
+  "description": "Clean Swiss International style poster featuring rigorous mathematical grid, high-contrast display typography, asymmetric whitespace tension, unadorned neo-grotesque type, and a single focal photography window.",
+  "dimensions": {
+    "width": 1080,
+    "height": 1440,
+    "aspectRatio": "3:4"
+  },
+  "fonts": [
+    "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+  ],
+  "colors": {
+    "background": "#F4F1EA",
+    "text_dark": "#0C0E14",
+    "text_muted": "#555A64",
+    "accent_vermilion": "#E63946",
+    "card_surface": "#FFFFFF",
+    "border_subtle": "rgba(12, 14, 20, 0.1)"
+  },
+  "slots": {
+    "collection_tag": "SWISS INTERNATIONAL",
+    "headline_primary": "Pure Geometric",
+    "headline_accent": "Structure.",
+    "subtext": "Asymmetric spatial balance, rigorous grid discipline, and purposeful reduction to essential function.",
+    "spec_1_label": "PROPORTION",
+    "spec_1_value": "1 : 1.618",
+    "spec_2_label": "GRID SYSTEM",
+    "spec_2_value": "12-Col Asymmetric"
+  }
+}

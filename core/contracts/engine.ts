@@ -3,6 +3,7 @@
  */
 
 import type { Asset } from './assets.ts';
+import type { RatioState, SupportedRatio } from '../geometry/ratio.ts';
 
 export type TargetType = 'poster';
 
@@ -16,6 +17,7 @@ export interface ProjectMetadata {
   designSystemId?: string;
   instructions?: string;
   version: number;
+  ratioState?: RatioState;
 }
 
 export interface ArtifactFile {
@@ -40,6 +42,9 @@ export interface GenerationInput {
   skillName?: string;
   attachments?: string[];
   dimensions?: { width: number; height: number };
+  ratio?: SupportedRatio;
+  ratioState?: RatioState;
+  signal?: AbortSignal;
 }
 
 export interface RefinementInput {
@@ -48,6 +53,18 @@ export interface RefinementInput {
   instruction: string;
   targetElementId?: string; // e.g. "hero" or "pricing-table" from data-od-id
   preserveSections?: string[];
+  signal?: AbortSignal;
+}
+
+export interface GenerationDiagnostics {
+  model: string;
+  accountId: string;
+  durationMs: number;
+  fallbackOccurred: boolean;
+  stockProvidersUsed: string[];
+  provider?: string;
+  toolsInvoked?: string[];
+  operation?: 'generate' | 'refine';
 }
 
 export interface GenerationResult {
@@ -59,13 +76,8 @@ export interface GenerationResult {
   allFiles: string[];
   entryHtmlFile: string;
   previewUrl: string;
-  diagnostics: {
-    model: string;
-    accountId: string;
-    durationMs: number;
-    fallbackOccurred: boolean;
-    stockProvidersUsed: string[];
-  };
+  ratioState?: RatioState;
+  diagnostics: GenerationDiagnostics;
   error?: string;
 }
 
@@ -73,8 +85,10 @@ export interface ExportOptions {
   format: 'png' | 'jpeg';
   width?: number;
   height?: number;
+  ratio?: SupportedRatio;
   slideIndex?: number;
   outputPath?: string;
+  signal?: AbortSignal;
 }
 
 export interface ExportResult {

@@ -122,6 +122,12 @@ export class TypographyDirector {
       selectedFamilies.push(accentFont.family);
     }
 
+    // Include Poppins for metrics, numbers, and stats (replacing monospace)
+    const poppinsFont = this.registry.getFont('Poppins');
+    if (poppinsFont && !selectedFamilies.includes(poppinsFont.family)) {
+      selectedFamilies.push(poppinsFont.family);
+    }
+
     let codeFont: FontDefinition | undefined;
     if (directives.hasCode) {
       codeFont = this.registry.getFont('JetBrains Mono');

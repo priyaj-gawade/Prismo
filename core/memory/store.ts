@@ -188,6 +188,20 @@ export class MarkdownMemoryStore implements MemoryStore {
       }
     }
 
-    fs.writeFileSync(path.join(this.baseDir, 'MEMORY.md'), lines.join('\n') + '\n', 'utf8');
+    const indexPath = path.join(this.baseDir, 'MEMORY.md');
+    const tempPath = path.join(this.baseDir, `MEMORY.md.tmp.${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
+    fs.writeFileSync(tempPath, lines.join('\n') + '\n', 'utf8');
+    try {
+      fs.renameSync(tempPath, indexPath);
+    } catch (renameErr: any) {
+      if (renameErr.code === 'EPERM' || renameErr.code === 'EBUSY' || renameErr.code === 'EEXIST') {
+        fs.copyFileSync(tempPath, indexPath);
+        try {
+          fs.unlinkSync(tempPath);
+        } catch {}
+      } else {
+        throw renameErr;
+      }
+    }
   }
 }

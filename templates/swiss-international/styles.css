@@ -1,0 +1,131 @@
+/* ==============================================================================
+   SWISS INTERNATIONAL & MINIMALIST LUXURY POSTER STYLESHEET
+   Canonical Dimensions: 1080px x 1440px
+   Aesthetic: Swiss International / Architectural Rationalism
+   ============================================================================== */
+
+:root {
+  --bg-primary: #f4f1ea;
+  --bg-surface: #ffffff;
+  --border-subtle: rgba(12, 14, 20, 0.1);
+  --accent-vermilion: #e63946;
+  --text-primary: #0c0e14;
+  --text-secondary: #555a64;
+  --font-display: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-stats: 'Poppins', sans-serif;
+  --font-mono: 'Poppins', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 1080px !important;
+  height: 1440px !important;
+  overflow: hidden !important;
+  background: var(--bg-primary);
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+.poster-artboard {
+  position: relative;
+  width: 1080px;
+  height: 1440px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 80px 72px;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+.poster-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.tape-badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-family: var(--font-stats);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent-vermilion);
+}
+
+.poster-headline {
+  font-family: var(--font-display);
+  font-size: 88px;
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.poster-headline .headline-accent {
+  color: var(--accent-vermilion);
+  font-style: italic;
+}
+
+.poster-subtext {
+  font-family: var(--font-body);
+  font-size: 26px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  max-width: 720px;
+}
+
+.poster-focal-frame {
+  width: 100%;
+  height: 600px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.poster-focal-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.poster-footer {
+  display: flex;
+  justify-content: space-between;
+  border-top: 2px solid var(--text-primary);
+  padding-top: 24px;
+}
+
+.spec-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.spec-label {
+  font-family: var(--font-stats);
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
+.spec-value {
+  font-family: var(--font-stats);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+}

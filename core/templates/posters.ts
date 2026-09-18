@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export interface PosterTemplateMeta {
   id: string;
@@ -32,9 +33,13 @@ export class PosterTemplateRegistry {
     if (customRoot && fs.existsSync(customRoot)) {
       this.templatesRoot = customRoot;
     } else {
+      const moduleTemplates = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../templates');
       const candidates = [
         path.resolve(process.cwd(), 'templates'),
+        path.resolve(process.cwd(), 'Prismo', 'templates'),
         path.resolve(process.cwd(), 'd8.7', 'templates'),
+        moduleTemplates,
+        path.resolve('c:/Users/Admin/Downloads/image creation/Prismo/templates'),
         path.resolve('c:/Users/Admin/Downloads/image creation/d8.7/templates')
       ];
       this.templatesRoot = candidates.find((c) => fs.existsSync(c)) || candidates[0];
@@ -100,6 +105,11 @@ export class PosterTemplateRegistry {
       let score = 0;
       const { meta } = record;
 
+      // Direct template id or name match (HIGHEST PRIORITY for cross-domain template execution)
+      if (lower.includes(meta.id.toLowerCase()) || lower.includes(meta.name.toLowerCase())) {
+        score += 1000;
+      }
+
       // Archetype matches
       if (meta.archetype === 'architecture-pipeline' && (lower.includes('architecture') || lower.includes('pipeline') || lower.includes('step') || lower.includes('graph') || lower.includes('reactivity') || lower.includes('node'))) {
         score += 50;
@@ -128,18 +138,55 @@ export class PosterTemplateRegistry {
         score += 60;
       }
 
-      // Specific keywords
-      if (lower.includes('kraft') || lower.includes('paper') || lower.includes('tape') || lower.includes('serif') || lower.includes('hand-drawn')) {
-        if (meta.id === 'kraft-architecture') score += 100;
+      // Natural domain cues and specific keywords
+      if (meta.id === 'motorsport-supercars') {
+        const motorsportKeywords = [
+          'motorsport', 'supercar', 'supercars', 'downforce', 'gt3', 'track weapon',
+          'racing', 'race', 'track', 'circuit', 'le mans', 'drift', 'touge', 'rally',
+          'rotary', 'twin-turbo', 'turbo', 'rpm', 'horsepower', 'engine', 'chassis',
+          'porsche', 'ferrari', 'mazda', 'toyota', 'ae86', '787b', 'lamborghini',
+          'mclaren', 'bmw', 'audi', 'mercedes', 'amg', 'automotive', 'car', 'hypercar',
+          'scrim', 'vignette', 'cornering', 'downhill'
+        ];
+        for (const kw of motorsportKeywords) {
+          if (lower.includes(kw)) score += 30;
+        }
       }
-      if (lower.includes('telemetry') || lower.includes('waveform') || lower.includes('inverted') || lower.includes('audio') || lower.includes('speech-to-text')) {
-        if (meta.id === 'ui-telemetry-inverted') score += 100;
+
+      if (meta.id === 'kraft-architecture') {
+        const kraftKeywords = [
+          'kraft', 'paper', 'tape', 'serif', 'hand-drawn', 'cheat sheet', 'field guide',
+          'guide', 'setup', 'tutorial', 'checklist', 'reference card', 'handbook',
+          'walkthrough', 'notes', 'scratchpad', 'blueprint', 'postgres', 'docker',
+          'concurrency', 'isolation', 'explaining', 'practical', 'rules of thumb', 'primer'
+        ];
+        for (const kw of kraftKeywords) {
+          if (lower.includes(kw)) score += 30;
+        }
       }
-      if (lower.includes('vue') || lower.includes('bento') || lower.includes('langchain') || lower.includes('dependency') || lower.includes('proxy')) {
-        if (meta.id === 'bento-execution-pipeline') score += 100;
+
+      if (meta.id === 'bento-execution-pipeline') {
+        const bentoKeywords = [
+          'bento', 'pipeline', 'execution', 'runtime', 'internals', 'under the hood',
+          'dissecting', 'compiler', 'engine', 'scheduler', 'dispatch', 'paxos', 'consensus',
+          'git', 'dag', 'object storage', 'state machine', 'protocol', 'distributed',
+          'dependency', 'proxy', 'reactive', 'vue', 'event loop', 'algorithm', 'stages', 'kafka'
+        ];
+        for (const kw of bentoKeywords) {
+          if (lower.includes(kw)) score += 30;
+        }
       }
-      if (lower.includes('motorsport') || lower.includes('supercar') || lower.includes('supercars') || lower.includes('downforce') || lower.includes('gt3') || lower.includes('m-division') || lower.includes('track weapon')) {
-        if (meta.id === 'motorsport-supercars') score += 100;
+
+      if (meta.id === 'ui-telemetry-inverted') {
+        const telemetryKeywords = [
+          'telemetry', 'waveform', 'inverted', 'audio', 'speech', 'speech-to-text',
+          'model release', 'benchmark', 'meters', 'mastering', 'compressor', 'workstation',
+          'console', 'whisper', 'scribe', 'alignment', 'diarization', 'transcript',
+          'lufs', 'acoustic', 'phoneme', 'dsp', 'gain reduction', 'equalizer', 'saturation'
+        ];
+        for (const kw of telemetryKeywords) {
+          if (lower.includes(kw)) score += 30;
+        }
       }
 
       // Description token matching
@@ -239,13 +286,71 @@ export class PosterTemplateRegistry {
 
     let renderedHtml = record.html;
     for (const [key, value] of Object.entries(overrides)) {
-      // Replace data-slot="key" or data-od-id matching or {{key}}
-      const regexMustache = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
+      const kebab = key.replace(/_/g, '-');
+
+      // 1. Mustache placeholders {{key}} or {{kebab}}
+      const regexMustache = new RegExp(`\\{\\{\\s*(?:${key}|${kebab})\\s*\\}\\}`, 'g');
       renderedHtml = renderedHtml.replace(regexMustache, value);
 
-      // Also replace slot text inside tags with data-od-id="key" or class="key"
-      const regexOd = new RegExp(`(<[^>]*data-od-id="${key}"[^>]*>)[^<]*(<\\/)`, 'g');
-      renderedHtml = renderedHtml.replace(regexOd, `$1${value}$2`);
+      // 2. data-slot attribute: data-slot="key" or data-slot="kebab"
+      const regexSlot = new RegExp(`(<([a-z0-9]+)[^>]*data-slot="(?:${key}|${kebab})"[^>]*>)[\\s\\S]*?(<\\/\\2>)`, 'gi');
+      renderedHtml = renderedHtml.replace(regexSlot, `$1${value}$2`);
+
+      // 3. Spec number helpers: spec_1_value / spec-1-value or spec_1_label / spec-1-label
+      const specMatch = key.match(/^spec_?(\d+)_(value|label)$/i);
+      if (specMatch) {
+        const num = specMatch[1];
+        const type = specMatch[2].toLowerCase();
+        const targetClass = type === 'value' ? 'spec-value' : 'spec-label';
+        const specRegex = new RegExp(
+          `(<div[^>]*data-od-id="spec-${num}"[^>]*>[\\s\\S]*?<span[^>]*class="[^"]*\\b${targetClass}\\b[^"]*"[^>]*>)[\\s\\S]*?(<\\/span>)`,
+          'gi'
+        );
+        renderedHtml = renderedHtml.replace(specRegex, `$1${value}$2`);
+      }
+
+      // 4. Common semantic aliases across templates
+      const aliasMap: Record<string, string[]> = {
+        model_tag: ['model-code', 'model-tag'],
+        handle: ['topbar-handle', 'user-handle'],
+        slide_index: ['topbar-slide', 'slide-index'],
+        terminal_filename: ['title-filename', 'terminal-filename', 'code-filename', 'filename'],
+        code_file: ['code-filename', 'file-name', 'filename'],
+        subtitle: ['poster-subtext', 'hero-description', 'subtext'],
+        subtext: ['poster-subtext', 'hero-description', 'subtitle'],
+        headline_intro: ['headline-lead', 'intro-lead'],
+        headline_sans: ['headline-sans', 'headline-primary'],
+        headline_serif: ['headline-serif', 'headline-accent'],
+        headline_main: ['headline-primary', 'headline-sans', 'headline-main'],
+        headline_highlight: ['headline-accent', 'headline-serif', 'text-gradient'],
+        headline_body: ['headline-main', 'headline-body'],
+        tape_badge: ['tape-badge', 'topic-badge', 'category-badge'],
+        topic_badge: ['nav-badge', 'category-badge', 'tape-badge'],
+        status_chip: ['status-text', 'status-chip', 'chip-status'],
+        footer_action: ['footer-action-link', 'swipe-badge', 'footer-action', 'footer-swipe', 'footer-cta']
+      };
+
+      const searchTerms = Array.from(new Set([
+        key,
+        kebab,
+        ...(aliasMap[key] || []),
+        ...(aliasMap[kebab] || [])
+      ]));
+
+      for (const term of searchTerms) {
+        const elemRegex = new RegExp(
+          `(<(p|span|h[1-6]|div|a|small|header)[^>]*(?:data-od-id|class)="[^"]*\\b${term}\\b[^"]*"[^>]*>)([\\s\\S]*?)(<\\/\\2>)`,
+          'gi'
+        );
+        renderedHtml = renderedHtml.replace(elemRegex, (match, openTag, tagName, innerContent, closeTag) => {
+          // If innerContent contains a non-empty text span (e.g. badge with dot + text label)
+          if (/<span\b[^>]*>[^<]+<\/span>/i.test(innerContent)) {
+            const updatedInner = innerContent.replace(/(<span\b[^>]*>)[^<]+(<\/span>)/i, `$1${value}$2`);
+            return `${openTag}${updatedInner}${closeTag}`;
+          }
+          return `${openTag}${value}${closeTag}`;
+        });
+      }
     }
 
     return {

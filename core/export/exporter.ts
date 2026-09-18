@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import type { ExportOptions, ExportResult } from '../contracts/engine.ts';
 
@@ -11,6 +11,79 @@ export interface ImageValidationResult {
   height: number;
   fileSize: number;
   error?: string;
+}
+
+interface ProcessRunResult {
+  status: number | null;
+  stdout?: string;
+  error?: Error;
+}
+
+function runProcessAsync(
+  executable: string,
+  args: string[],
+  options: { timeout?: number; signal?: AbortSignal; windowsHide?: boolean; captureStdout?: boolean } = {}
+): Promise<ProcessRunResult> {
+  return new Promise((resolve) => {
+    if (options.signal?.aborted) {
+      return resolve({ status: null, error: new Error('Operation aborted') });
+    }
+
+    let child: ChildProcess;
+    let timer: NodeJS.Timeout | null = null;
+    let timedOut = false;
+    let stdoutData = '';
+
+    try {
+      child = spawn(executable, args, { windowsHide: options.windowsHide ?? true });
+    } catch (err: any) {
+      return resolve({ status: null, error: err });
+    }
+
+    if (options.captureStdout && child.stdout) {
+      child.stdout.setEncoding('utf8');
+      child.stdout.on('data', (chunk) => {
+        stdoutData += chunk;
+      });
+    }
+
+    const onAbort = () => {
+      if (timer) clearTimeout(timer);
+      try {
+        child.kill('SIGKILL');
+      } catch {}
+      resolve({ status: null, error: new Error('Operation aborted') });
+    };
+
+    if (options.signal) {
+      options.signal.addEventListener('abort', onAbort, { once: true });
+    }
+
+    if (options.timeout && options.timeout > 0) {
+      timer = setTimeout(() => {
+        timedOut = true;
+        try {
+          child.kill('SIGKILL');
+        } catch {}
+      }, options.timeout);
+    }
+
+    child.on('error', (err) => {
+      if (timer) clearTimeout(timer);
+      if (options.signal) options.signal.removeEventListener('abort', onAbort);
+      resolve({ status: null, error: err });
+    });
+
+    child.on('close', (code) => {
+      if (timer) clearTimeout(timer);
+      if (options.signal) options.signal.removeEventListener('abort', onAbort);
+      if (timedOut) {
+        resolve({ status: code, stdout: stdoutData, error: new Error(`Process timed out after ${options.timeout}ms`) });
+      } else {
+        resolve({ status: code, stdout: stdoutData });
+      }
+    });
+  });
 }
 
 export class HeadlessExporter {
@@ -30,6 +103,8 @@ export class HeadlessExporter {
       'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
       'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
       'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
       '/usr/bin/google-chrome',
       '/usr/bin/chromium-browser',
       '/usr/bin/chromium'
@@ -157,9 +232,10 @@ export class HeadlessExporter {
       targetUrl
     ];
 
-    const result = spawnSync(browserBin, args, {
+    const result = await runProcessAsync(browserBin, args, {
       timeout: 15000,
-      windowsHide: true
+      windowsHide: true,
+      signal: options.signal
     });
 
     if (result.error) {
@@ -178,7 +254,7 @@ export class HeadlessExporter {
         `--screenshot=${outPath}`,
         targetUrl
       ];
-      spawnSync(browserBin, fallbackArgs, { timeout: 15000, windowsHide: true });
+      await runProcessAsync(browserBin, fallbackArgs, { timeout: 15000, windowsHide: true, signal: options.signal });
     }
 
     if (!fs.existsSync(outPath)) {
@@ -270,10 +346,10 @@ window.addEventListener('load', async () => {
         targetUrl
       ];
 
-      const proc = spawnSync(browserBin, args, {
+      const proc = await runProcessAsync(browserBin, args, {
         timeout: 10000,
         windowsHide: true,
-        encoding: 'utf8'
+        captureStdout: true
       });
 
       if (tempProbeFile && fs.existsSync(tempProbeFile)) {

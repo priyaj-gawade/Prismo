@@ -1,3 +1,5 @@
+import { validateDimensionPair, CANONICAL_RATIO_REGISTRY, type SupportedRatio } from '../geometry/ratio.ts';
+
 export interface SelectorCoverage {
   totalClasses: number;
   coveredClasses: number;
@@ -477,21 +479,43 @@ export class ArtifactValidator {
   }
 
   /**
-   * Integer-safe validation for strict 3:4 poster ratio: width * 4 === height * 3
+   * Integer-safe validation for poster dimensions.
+   * If expectedRatio is specified, validates that dimensions match that specific ratio.
+   * If omitted, defaults to '3:4' for full backward compatibility with existing tests.
    */
-  validatePosterDimensions(width: number, height: number): { valid: boolean; error?: string } {
+  validatePosterDimensions(
+    width: number,
+    height: number,
+    expectedRatio: SupportedRatio = '3:4'
+  ): { valid: boolean; ratio?: SupportedRatio; error?: string } {
     if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0) {
       return { valid: false, error: `Dimensions must be positive integers: received ${width}x${height}` };
     }
 
-    // Integer-safe ratio check: width / height === 3 / 4 <=> width * 4 === height * 3
-    if (width * 4 !== height * 3) {
+    const res = validateDimensionPair(width, height);
+    if (!res.valid) {
+      return res;
+    }
+
+    if (res.ratio !== expectedRatio) {
+      const canonicalTarget = CANONICAL_RATIO_REGISTRY[expectedRatio].dimensions;
       return {
         valid: false,
-        error: `Poster format must be strictly 3:4. Canonical target is 1080x1440. Received ${width}x${height} (ratio ${(width / height).toFixed(3)}).`
+        ratio: res.ratio,
+        error: `Poster format must be strictly ${expectedRatio}. Canonical target is ${canonicalTarget.width}x${canonicalTarget.height}. Received ${width}x${height} (ratio ${res.ratio}).`
       };
     }
 
-    return { valid: true };
+    return { valid: true, ratio: res.ratio };
+  }
+
+  /**
+   * Validates whether dimensions match ANY of the 5 supported canonical ratios.
+   */
+  validateAnySupportedDimensions(
+    width: number,
+    height: number
+  ): { valid: boolean; ratio?: SupportedRatio; error?: string } {
+    return validateDimensionPair(width, height);
   }
 }

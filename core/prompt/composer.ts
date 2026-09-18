@@ -1,4 +1,5 @@
 import type { SkillDefinition } from '../skills/types.ts';
+import type { SupportedRatio } from '../geometry/ratio.ts';
 
 export interface PromptComposerInput {
   baseInstructions?: string;
@@ -15,6 +16,12 @@ export interface PromptComposerInput {
   retrievedContext?: string;
   userPrompt: string;
   refinementSectionId?: string;
+  geometryContext?: {
+    ratio: SupportedRatio;
+    width: number;
+    height: number;
+    orientation: 'portrait' | 'landscape' | 'square';
+  };
 }
 
 export interface ComposedPromptResult {
@@ -40,9 +47,14 @@ export class PromptComposer {
       }
     };
 
+    const ratio = input.geometryContext?.ratio || '3:4';
+    const width = input.geometryContext?.width || 1080;
+    const height = input.geometryContext?.height || 1440;
+    const orientation = input.geometryContext?.orientation || 'portrait';
+
     // Layer 1: Core Base Instructions
-    const defaultBase = `You are Prismo, the Standalone 3:4 Visual Poster Design Engine.
-Your mission is to produce stunning, state-of-the-art 3:4 aspect ratio posters (1080px x 1440px) that function as GENUINE VISUAL COMPOSITIONS, not software dashboards.
+    const defaultBase = `You are Prismo, the High-Density Multi-Ratio Visual Design Engine.
+Your mission is to author stunning, state-of-the-art visual compositions specifically tailored for the active ${ratio} canvas (${width}px x ${height}px, ${orientation} orientation) that function as GENUINE VISUAL COMPOSITIONS, not software dashboards.
 
 ==================================================
 D8.7 — FINAL POSTER VISUAL QUALITY POLICY
@@ -58,9 +70,13 @@ DO NOT automatically generate:
 [BIG TITLE] + [BIG ACCENT TITLE] + [MARKETING PARAGRAPH] + [FULL-WIDTH DARKENED IMAGE] + [4-COLUMN SPEC STRIP].
 Each poster must independently determine title placement, title treatment, image treatment, supporting copy, and composition based on the actual subject and visual intent.
 
+GEOMETRY & SPATIAL CONSIDERATIONS:
+Geometry-specific guidance provides optional spatial considerations and must not prescribe a fixed composition, layout skeleton, alignment, or ingredient set.
+Compose freely to leverage the ${orientation} proportions (${width}px x ${height}px) without forcing rigid column or row templates.
+
 HARD MICRO-UI CHROME BANS:
-- Minimum designed font size: 22px (headline 72px+, major secondary 32px+, supporting 24px+, captions 20px+). Never use small text as decorative filler.
-- ZERO pills/chips (default 0; never status pills like ACTIVE, LIVE, SYSTEM, TERM, STATUS).
+- ADAPTIVE READABILITY: Primary content must be distance-readable; secondary text must remain readable; microtext is allowed only for justified credits/legal/source information. Never use small text as decorative filler.
+- ZERO decorative pills/chips. A pill or chip should only exist when it is genuinely semantic content (e.g. status category), not as visual filler.
 - ZERO colored status dots/LEDs (never red/green/yellow status lights).
 - NO 3-part header or footer template rails.
 - NO fake technical metadata or system state labels (TERM 04, ACTIVE LEADER, NODE_01, ARCHIV 1925, LAT. 51°).
@@ -112,7 +128,7 @@ USE FEWER CARDS. USE MORE ART DIRECTION.`;
 
     // Layer 7: Component Manifest
     const defaultManifest = `Standard Poster Primitives:
-- Canvas: .poster-artboard (1080px x 1440px, position: relative, overflow: hidden)
+- Canvas: .poster-artboard (${width}px x ${height}px, position: relative, overflow: hidden)
 - Bleed Media: .poster-bleed-image (position: absolute, inset: 0, object-fit: cover)
 - Focal Media: .poster-focal-frame (position: relative, overflow: hidden)
 - Typography: .poster-headline, .poster-subtext, .poster-editorial-tag`;
@@ -121,12 +137,22 @@ USE FEWER CARDS. USE MORE ART DIRECTION.`;
     // Layer 8: Universal Craft Rules
     const defaultCraftRules = [
       'D8.7 ART DIRECTION POLICY: Every poster must read as ONE deliberate visual composition. Never generate repeated rounded card grids, 3-column metric cards, or STEP 01/02/03 pipelines.',
+      'NEGATIVE PROMPT & BANNED THEME (STRICT BAN ON DARK-NAVY TECH DASHBOARD MONOCULTURE):',
+      '  - BANNED COLOR SCHEME: Strictly DO NOT default to the dark navy / midnight blue tech dashboard theme (background #0B0F17, #080C14, #131B2E, #111827 with neon cyan #00F0FF/#38BDF8 and electric blue #2563EB/#3B82F6 accents) across different templates. Never turn tactile, architectural, educational, automotive, or cultural posters into generic dark SaaS dashboards.',
+      '  - MANDATORY TEMPLATE PALETTE FIDELITY: If a template defines a unique palette (e.g. kraft-architecture with warm tactile cardboard #d8bc98, dark tape badges #181818, terracotta accents #c8522c, and dark ink typography #1a1614), you MUST execute in that authentic palette. NEVER substitute kraft paper or light editorial subjects with dark navy mode.',
+      '  - BANNED AI SLOP LAYOUT FORMULAS: Avoid repetitive layout convergence across different prompts:',
+      '    * NO REPETITIVE VERTICAL CARD GRIDS: Do NOT divide every poster into 2 to 5 rounded translucent dark boxes with micro-numbers (01, 02, 03...) and code pills.',
+      '    * NO DEFAULT 3-COLUMN METRICS RAILS: Do NOT add a bottom horizontal container with 3 columns of metrics (e.g. LATENCY | THROUGHPUT | EXECUTION or 01 | 02 | 03) unless the user explicitly requested a live telemetry dashboard.',
+      'STRICT BAN ON MONOSPACE FONTS (USE POPPINS INSTEAD):',
+      '  - Monospace fonts (e.g. "JetBrains Mono", "Fira Code", "Courier", "Consolas", ui-monospace, monospace) are strictly banned across the entire poster! Never use monospace for numbers, metrics, telemetry, specs, labels, body text, or sentences.',
+      '  - Always use "Poppins" (Google Font Poppins, e.g. font-family: "Poppins", sans-serif; font-weight: 600 or 700) for numeric metrics, measurements, telemetry values, technical specs, and badges. When displaying any numerical data or stats, format them with Poppins.',
       'ANTI-TEMPLATE RULE: Do not automatically generate the default formula (Big Title + Accent Title + Paragraph + Darkened Image + 4-Column Spec Bar). Choose composition independently based on subject.',
-      'HARD MICRO-TEXT POLICY: Minimum designed font size is 22px. Never use font sizes below 22px for content or decorative labels. Posters must communicate from a distance.',
-      'HARD PILL & STATUS-DOT BAN: Default 0 pills (max 1 semantic only). ZERO colored status indicator dots or LEDs (no green/red/yellow status lights).',
+      'GEOMETRY ADAPTATION POLICY: Geometry-specific guidance provides optional spatial considerations and must not prescribe a fixed composition, layout skeleton, alignment, or ingredient set.',
+      'ADAPTIVE READABILITY POLICY: Primary content must be distance-readable; secondary text must remain readable; microtext is allowed only for justified credits/legal/source information. Posters must communicate from a distance.',
+      'NO DECORATIVE PILLS: Zero decorative pills/chips. A pill should only exist when it is genuinely semantic content, never as visual filler. ZERO colored status indicator dots or LEDs (no green/red/yellow status lights).',
       'TECHNICAL POSTER != MIND MAP: Never create box-and-arrow whiteboard diagrams ([BOX] ─── [BOX]) or repeated node cards (.node-card, .state-node, .server-box). Never put diagrams inside enclosed dark panels.',
-      'VUE FLOW IS OPTIONAL: Vue Flow is strictly optional. If used, never use default widgets/classes (.vue-flow__node-default, .vue-flow__handle, .vue-flow__controls). Use custom SVG/nodes only.',
-      'TYPOGRAPHY HIERARCHY: Technical subjects do NOT imply monospace! Use display neo-grotesque, editorial serif, or architectural sans. Never use monospace for headlines. Orbitron is prohibited.',
+      'VUE FLOW IS OPTIONAL: Vue Flow is strictly optional. If used, never use default widgets/classes (.vue-flow__node-default, .vue-flow__handle, .vue-flow__controls, .vue-flow__minimap). Use custom SVG/nodes only.',
+      'TYPOGRAPHY HIERARCHY: Monospace is completely banned across the entire poster! Use display neo-grotesque, editorial serif, or architectural sans for headings. For metrics, stats, telemetry, and numbers, ALWAYS use Poppins. Orbitron is prohibited.',
       'NO TEMPLATE RAILS: Never generate generic 3-part header rails (top-left/top-center/top-right) or 3-part footer rails (bottom-left/bottom-center/bottom-right).',
       'NO FAKE METADATA OR SYSTEM CHROME: Never invent labels like TERM 04, ACTIVE LEADER, NODE_01, SYSTEM STATUS, ARCHIV 1925, or LAT. 51°.',
       'EDITORIAL TYPOGRAPHY DISCIPLINE: Display headings must have strong roman weight as the primary anchor, but selective accent typography is encouraged (e.g. bold sans/grotesque paired with an expressive italic serif accent word or optical color highlight). Never make an entire headline italic.',

@@ -32,6 +32,13 @@ export class AssetProviderManager {
     if (local) local.setAssetsDir(dir);
   }
 
+  registerAdapter(adapter: StockProviderAdapter): void {
+    this.adapters.set(adapter.provider, adapter);
+    if (!this.fallbackOrder.includes(adapter.provider)) {
+      this.fallbackOrder.unshift(adapter.provider);
+    }
+  }
+
   getAdapter(provider: AssetProviderType): StockProviderAdapter | undefined {
     return this.adapters.get(provider);
   }

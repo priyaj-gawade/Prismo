@@ -1,9 +1,9 @@
 {
   "name": "prismo",
   "version": "1.0.0",
-  "description": "Prismo — High-Density 3:4 Social Poster & Visual Design Engine",
+  "description": "Prismo — High-Density Multi-Ratio Social Poster & Visual Design Engine",
   "type": "module",
-  "main": "core/engine.js",
+  "main": "core/index.ts",
   "scripts": {
     "build": "tsc",
     "cli": "node --experimental-strip-types app/cli/index.ts",

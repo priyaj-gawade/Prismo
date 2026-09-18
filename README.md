@@ -8,12 +8,13 @@ Prismo is a standalone, AI-powered design engine engineered to generate producti
 
 ## ✨ Features
 
-- **Strict 3:4 Full-Bleed Canvas**: Canonical 1080 &times; 1440 resolution designed specifically for high-impact social sharing and visual storytelling.
+- **Canonical Multi-Ratio Geometries**: Full support for 5 canonical aspect ratios (**3:4**, **9:16**, **16:9**, **1:1**, **4:3**) with integer-safe pixel dimensions, directional dark scrims, and geometry-adaptive typography.
+- **Headless Host Boundary**: Clean, framework-neutral API entrypoint (`core/index.ts`) for embedding directly into host applications (like chat interfaces or batch runners) without UI or network dependencies.
 - **Dynamic Thematic Presets**: Automatically detects color palettes from prompt context (e.g. *Amber + Charcoal*, *Cyan + Midnight Titanium*, *Emerald + Gold Luxury*, *Terracotta + Cream*, *Yellow Void*).
-- **Anti-AI-Slop Visual Discipline**: Strictly avoids generic purple gradients and raw emojis; leverages structured typography, glassmorphism, and Lucide vector icons.
-- **Headless Chrome Rendering & Export**: Fast, headless browser screenshot rendering to high-res PNG and JPEG with binary dimension validation.
-- **Multi-Account Rotation Pool**: Built-in account pooling with exponential backoff and circuit breaker failover.
-- **Interactive Studio Panel**: Live preview panel with real-time SSE reloading and surgical section refinement.
+- **Anti-AI-Slop Visual Discipline**: Strictly avoids generic purple gradients and raw emojis; leverages structured typography, selective accent styling, and Lucide vector icons.
+- **Non-Blocking Asynchronous Export**: Fast, Promise-wrapped headless Chrome export to high-res PNG and JPEG with binary dimension validation and `AbortSignal` cancellation.
+- **ModelProvider Seam & Multi-Account Pool**: Decoupled model interface with built-in Gemini account rotation, exponential backoff, and circuit breaker failover.
+- **Interactive Studio Panel**: Live preview panel with real-time SSE reloading, multi-ratio preview scaler, and surgical section refinement.
 
 ---
 
@@ -65,23 +66,27 @@ Visit **`http://localhost:5180`** to access the interactive web studio.
 ## 📂 Architecture
 
 ```
-d8.7/
+Prismo/
 ├── app/
 │   ├── cli/            # Standalone CLI interface
 │   └── server/         # HTTP server & static Studio UI panel
 ├── core/
+│   ├── index.ts        # Public framework-neutral headless engine boundary
 │   ├── config/         # Environment discovery & credential security
 │   ├── contracts/      # Engine interfaces & TypeScript schemas
-│   ├── design-system/  # Token generator & dynamic preset detector
-│   ├── export/         # Headless browser exporter (1080x1440 PNG/JPEG)
-│   ├── generation/     # Pure 3:4 Poster generation engine
-│   ├── memory/         # Session & active memory management
-│   ├── prompt/         # 10-layer structured prompt composer
-│   ├── providers/      # Gemini multi-account pool & circuit breaker
-│   ├── validation/     # Ratio validation & data-od-id coverage checks
+│   ├── design-system/  # Token generator, typography director & presets
+│   ├── export/         # Asynchronous headless browser exporter
+│   ├── generation/     # Poster generation engine with anti-slop checks
+│   ├── geometry/       # Canonical ratio capability & AgentToolRegistry
+│   ├── memory/         # Session & persistent markdown memory store
+│   ├── prompt/         # Structured prompt composer & Hallmark disciplines
+│   ├── providers/      # Gemini multi-account pool & ModelProvider seam
+│   ├── templates/      # Grounded poster templates & template registry
+│   ├── validation/     # Ratio validation, binary header & anti-slop checks
 │   └── workspace/      # Project filesystem manager & diff versioning
 ├── skills/
-│   └── poster/         # 3:4 Social Poster skill specification
+│   └── poster/         # Multi-ratio social poster skill specification
+├── templates/          # Shipped poster template definitions
 ├── package.json
 └── tsconfig.json
 ```

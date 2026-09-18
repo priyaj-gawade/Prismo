@@ -4,7 +4,6 @@ import fs from 'node:fs';
 import type { GenerationInput, RefinementInput, GenerationResult } from '../contracts/engine.ts';
 import type { WorkspaceManager } from '../workspace/workspace.ts';
 import { PromptComposer } from '../prompt/composer.ts';
-import type { GeminiProviderManager } from '../providers/manager.ts';
 import type { AssetProviderManager } from '../assets/manager.ts';
 import type { MarkdownMemoryStore } from '../memory/store.ts';
 import type { SessionTracker } from '../memory/session.ts';
@@ -15,6 +14,20 @@ import { ArtifactValidator } from '../validation/validator.ts';
 import { PosterTemplateRegistry } from '../templates/posters.ts';
 import { ReferenceStudyEngine } from '../design-knowledge/index.ts';
 import { TypographyDirector } from '../design-system/typography/index.ts';
+import type { ModelMessage, ModelProvider } from '../contracts/models.ts';
+import {
+  ProjectRatioCapability,
+  getOrientationForRatio,
+  type SupportedRatio,
+  type RatioState
+} from '../geometry/ratio.ts';
+import {
+  RATIO_FUNCTION_DECLARATIONS,
+  RatioToolDispatcher,
+  RatioPrecedenceCoordinator,
+  AgentToolRegistry,
+  formatRatioAgentContext
+} from '../geometry/ratio_tools.ts';
 
 export interface CompositionGrammar {
   image_position: string;
@@ -29,7 +42,7 @@ export interface CompositionGrammar {
 
 export class PosterEngine {
   private workspaceManager: WorkspaceManager;
-  private providerManager: GeminiProviderManager;
+  private providerManager: ModelProvider;
   private assetManager?: AssetProviderManager;
   private promptComposer: PromptComposer;
   private memoryStore: MarkdownMemoryStore;
@@ -41,19 +54,31 @@ export class PosterEngine {
   private validator: ArtifactValidator;
   private referenceStudyEngine: ReferenceStudyEngine;
   private typographyDirector: TypographyDirector;
+  private ratioCapability: ProjectRatioCapability;
+  private ratioToolDispatcher: RatioToolDispatcher;
+  private toolRegistry: AgentToolRegistry;
+  private precedenceCoordinator: RatioPrecedenceCoordinator;
 
   constructor(dependencies: {
     workspaceManager: WorkspaceManager;
-    providerManager: GeminiProviderManager;
+    providerManager: ModelProvider;
     assetManager?: AssetProviderManager;
     memoryStore: MarkdownMemoryStore;
     sessionTracker: SessionTracker;
+    ratioCapability?: ProjectRatioCapability;
+    ratioToolDispatcher?: RatioToolDispatcher;
+    toolRegistry?: AgentToolRegistry;
+    precedenceCoordinator?: RatioPrecedenceCoordinator;
   }) {
     this.workspaceManager = dependencies.workspaceManager;
     this.providerManager = dependencies.providerManager;
     this.assetManager = dependencies.assetManager;
     this.memoryStore = dependencies.memoryStore;
     this.sessionTracker = dependencies.sessionTracker;
+    this.ratioCapability = dependencies.ratioCapability || new ProjectRatioCapability();
+    this.ratioToolDispatcher = dependencies.ratioToolDispatcher || new RatioToolDispatcher(this.ratioCapability);
+    this.toolRegistry = dependencies.toolRegistry || this.ratioToolDispatcher.getRegistry();
+    this.precedenceCoordinator = dependencies.precedenceCoordinator || new RatioPrecedenceCoordinator(this.ratioCapability);
 
     this.promptComposer = new PromptComposer();
     this.diffEngine = new FilesystemDiffEngine();
@@ -65,7 +90,40 @@ export class PosterEngine {
     this.typographyDirector = new TypographyDirector();
   }
 
+  private async generateTextViaProvider(options: {
+    model?: string;
+    systemInstruction?: string;
+    prompt: string;
+    signal?: AbortSignal;
+  }): Promise<{ text: string; model: string; accountId: string; provider: string }> {
+    if (this.providerManager.generateText) {
+      const res = await this.providerManager.generateText(options);
+      return {
+        text: res.text,
+        model: res.model,
+        accountId: res.accountId,
+        provider: (res as any).provider || 'custom'
+      };
+    }
+    const messages: ModelMessage[] = [{ role: 'user', content: options.prompt }];
+    const { result, diagnostics } = await this.providerManager.generate(messages, {
+      model: options.model as any,
+      systemInstruction: options.systemInstruction,
+      signal: options.signal
+    });
+    return {
+      text: result.text,
+      model: diagnostics.model,
+      accountId: diagnostics.accountId,
+      provider: diagnostics.provider || 'gemini'
+    };
+  }
+
   async generate(input: GenerationInput): Promise<GenerationResult> {
+    if (input.signal?.aborted) {
+      throw new DOMException('Operation aborted', 'AbortError');
+    }
+    const toolsInvoked: string[] = [];
     const startTime = Date.now();
     const runId = `run_poster_${randomUUID().replaceAll('-', '').slice(0, 8)}`;
     const project = this.workspaceManager.getProject(input.projectId);
@@ -75,11 +133,91 @@ export class PosterEngine {
     const preSnapshot = await this.diffEngine.snapshot(projectRoot);
     const skill = this.skillRegistry.getSkill('poster');
 
-    // Strict 3:4 aspect ratio enforcement (canonical 1080 x 1440)
-    const width = input.dimensions?.width || 1080;
-    const height = input.dimensions?.height || 1440;
+    // 1. Ratio Precedence Evaluation (Explicit User > Agent Decision > Default)
+    const ratioEval = this.precedenceCoordinator.evaluateTurn(input.projectId, input.prompt);
+    if (ratioEval.unsupportedError) {
+      throw new Error(ratioEval.unsupportedError);
+    }
 
-    const ratioCheck = this.validator.validatePosterDimensions(width, height);
+    let activeRatioState = ratioEval.activeRatioState;
+
+    // 2. Agent Ratio Decision: Only run tool loop if the turn requires agent decision
+    // Invariants:
+    // - Explicit user ratio: locked for current turn (shouldRunAgentRatioTool = false)
+    // - Existing agent-selected ratio: remains stable by default on ordinary refinements (shouldRunAgentRatioTool = false)
+    // - Agent may change an existing agent-selected ratio: only when prompt calls for a different geometry (shouldRunAgentRatioTool = true)
+    // - Fresh project with origin === 'default': agent decides ratio based on initial prompt (shouldRunAgentRatioTool = true)
+    if (ratioEval.shouldRunAgentRatioTool) {
+      try {
+        const ratioMessages: ModelMessage[] = [
+          {
+            role: 'user',
+            content: `Analyze the user's poster prompt and decide the most appropriate aspect ratio: "${input.prompt}".\n${formatRatioAgentContext(activeRatioState, ratioEval.isAdaptationTurn)}`
+          }
+        ];
+
+        // Bounded function-calling round trip (max 3 iterations)
+        const MAX_TOOL_STEPS = 3;
+        let toolStep = 0;
+
+        while (toolStep < MAX_TOOL_STEPS) {
+          if (input.signal?.aborted) {
+            throw new DOMException('Operation aborted', 'AbortError');
+          }
+
+          const genResult = await this.providerManager.generate(ratioMessages, {
+            model: 'gemini-3.5-flash-lite',
+            tools: [{ functionDeclarations: this.toolRegistry.getDeclarations() }],
+            signal: input.signal
+          });
+
+          const calls = genResult.result.functionCalls;
+          if (!calls || calls.length === 0) {
+            break;
+          }
+
+          ratioMessages.push({
+            role: 'assistant',
+            parts: calls.map((c) => ({ functionCall: c }))
+          });
+
+          let ratioSetSuccessfully = false;
+          for (const call of calls) {
+            toolsInvoked.push(call.name);
+            const toolExec = await this.toolRegistry.executeTool(input.projectId, call);
+            if (call.name === 'set_ratio' && toolExec.success) {
+              ratioSetSuccessfully = true;
+            }
+            ratioMessages.push({
+              role: 'function',
+              parts: [{
+                functionResponse: {
+                  name: call.name,
+                  response: { output: toolExec }
+                }
+              }]
+            });
+          }
+
+          toolStep++;
+          if (ratioSetSuccessfully) {
+            break;
+          }
+        }
+
+        activeRatioState = this.ratioCapability.getProjectRatio(input.projectId);
+        this.workspaceManager.updateProjectMetadata(input.projectId, { ratioState: activeRatioState });
+      } catch (err) {
+        // Non-blocking fallback preserves current/default ratio
+        console.warn('[PosterEngine] Agent ratio decision round trip non-blocking warning:', err);
+      }
+    }
+
+    // Active dimensions from evaluated ratio state
+    const width = input.dimensions?.width || activeRatioState.dimensions.width;
+    const height = input.dimensions?.height || activeRatioState.dimensions.height;
+
+    const ratioCheck = this.validator.validatePosterDimensions(width, height, activeRatioState.ratio);
     if (!ratioCheck.valid) {
       throw new Error(ratioCheck.error);
     }
@@ -166,9 +304,11 @@ TECHNICAL POSTER ≠ MIND MAP (HARD RULE):
 - Do NOT place diagrams inside dark enclosed panels (.diagram-container, .hero-diagram-container). Diagrams must integrate directly into the 3:4 canvas.
 - Vue Flow is strictly OPTIONAL. If node graphs are used, NEVER use default Vue Flow classes/widgets (.vue-flow__node-default, .vue-flow__handle, .vue-flow__controls, .vue-flow__minimap). Use custom SVG or custom node styling only.`;
 
+    const orientation = getOrientationForRatio(activeRatioState.ratio);
     const posterPrompt = `${input.prompt}
 CRITICAL POSTER SPECIFICATION:
-Strict 3:4 Full-Bleed Canvas Dimensions: ${width}px x ${height}px.
+Strict ${activeRatioState.ratio} Canvas Dimensions: ${width}px x ${height}px (${orientation} orientation).
+Geometry-specific guidance provides optional spatial considerations and must not prescribe a fixed composition, layout skeleton, alignment, or ingredient set.
 ${sessionDiversityHint}
 
 ${imageDirective}
@@ -200,6 +340,10 @@ ORCHESTRATION INSTRUCTIONS:
        .poster-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(5, 7, 10, 0.85) 0%, rgba(5, 7, 10, 0.15) 30%, rgba(5, 7, 10, 0.7) 65%, rgba(5, 7, 10, 0.98) 100%); }
      - If text is in top-left or corner:
        .poster-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse at top left, rgba(5, 7, 10, 0.95) 0%, rgba(5, 7, 10, 0.7) 40%, rgba(5, 7, 10, 0) 80%); }
+     - If text is on the LEFT side (e.g. landscape/widescreen left column):
+       .poster-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, rgba(5, 7, 10, 0.95) 0%, rgba(5, 7, 10, 0.7) 40%, rgba(5, 7, 10, 0.1) 75%, transparent 100%); }
+     - If text is on the RIGHT side (e.g. landscape/widescreen right column):
+       .poster-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(270deg, rgba(5, 7, 10, 0.95) 0%, rgba(5, 7, 10, 0.7) 40%, rgba(5, 7, 10, 0.1) 75%, transparent 100%); }
      NEVER omit the dark scrim on photographic posters; white text on bright imagery without a dark scrim is strictly prohibited.
   8. Restrained secondary info: subtitles, paragraphs, and spec bars are strictly optional
 - PALETTE FREEDOM: Set explicit background color on .poster-artboard in styles.css matching the subject (e.g. warm linen, crisp white, deep obsidian, technical slate). Do NOT force dark navy.
@@ -227,12 +371,9 @@ html, body {
   width: ${width}px;
   height: ${height}px;
   margin: 0;
-  padding: 64px 60px;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
 }
 
 /* Image Composition & Directional Scrim Primitives */
@@ -279,25 +420,124 @@ Ensure you output BOTH:
 2. \`\`\`css:styles.css\`\`\` with COMPLETE visual styling for all classes in the poster.`;
 
     const activeMemory = await this.memoryStore.readActiveMemory();
-    const designMd = this.workspaceManager.readFile(input.projectId, 'DESIGN.md') || undefined;
-    const tokensCss = this.workspaceManager.readFile(input.projectId, 'tokens.css') || undefined;
+    let designMd = this.workspaceManager.readFile(input.projectId, 'DESIGN.md') || undefined;
+    let tokensCss = this.workspaceManager.readFile(input.projectId, 'tokens.css') || undefined;
+
+    // Grounded template palette alignment (preventing default modern-dark preset from overriding template design)
+    const bestTemplate = this.templateRegistry.findBestTemplate(input.prompt);
+    if (bestTemplate) {
+      if (bestTemplate.meta.id === 'kraft-architecture') {
+        tokensCss = `/* Kraft Paper Editorial Tokens */
+:root {
+  --color-background: #d8bc98;
+  --color-surface: #cbaf89;
+  --color-surface_raised: #e4cdb4;
+  --color-primary: #c8522c;
+  --color-accent: #181818;
+  --color-text: #1a1614;
+  --color-text_muted: #4a423d;
+  --color-border: #4a423d;
+  --font-sans: 'Syne', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'Poppins', sans-serif;
+  --font-stats: 'Poppins', sans-serif;
+}`;
+        designMd = `# Kraft Paper Editorial & Architecture Pipeline
+Tactile warm kraft paper (#d8bc98), black tape badges (#181818), terracotta accents (#c8522c), and dark ink typography (#1a1614).
+STRICT MANDATE: Use warm tactile paper background (#d8bc98). DO NOT use dark mode.`;
+      } else if (bestTemplate.meta.id === 'swiss-international') {
+        tokensCss = `/* Swiss International Editorial Tokens */
+:root {
+  --color-background: #f4f1ea;
+  --color-surface: #ffffff;
+  --color-primary: #0c0e14;
+  --color-accent: #e63946;
+  --color-text: #0c0e14;
+  --color-text_muted: #555a64;
+  --color-border: rgba(12, 14, 20, 0.1);
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-stats: 'Poppins', sans-serif;
+  --font-mono: 'Poppins', sans-serif;
+}`;
+        designMd = `# Swiss International & Minimalist Luxury Editorial
+Clean architectural grid, crisp white & cream ground (#f4f1ea), high-contrast black typography (#0c0e14), and optical vermilion accent (#e63946).
+STRICT MANDATE: Use clean high-contrast cream/white paper ground (#f4f1ea). DO NOT use dark mode.`;
+      } else if (bestTemplate.meta.id === 'motorsport-supercars') {
+        tokensCss = `/* Cinematic Hero Editorial Tokens */
+:root {
+  --color-background: #05070a;
+  --color-surface: #0e121a;
+  --color-primary: #ef4444;
+  --color-accent: #ef4444;
+  --color-text: #f8fafc;
+  --color-text_muted: #94a3b8;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-stats: 'Poppins', sans-serif;
+  --font-mono: 'Poppins', sans-serif;
+}`;
+        designMd = `# Cinematic Hero Editorial Pipeline
+Full-bleed dramatic subject photography with directional dark scrim, bold Roman sans headline with selective italic serif accent, and high-impact stats formatted in Poppins.`;
+      } else if (bestTemplate.meta.id === 'bento-execution-pipeline') {
+        tokensCss = `/* Bento Execution Pipeline Tokens */
+:root {
+  --color-background: #080c14;
+  --color-surface: #0f1624;
+  --color-surface_raised: #141e30;
+  --color-primary: #10b981;
+  --color-accent: #06b6d4;
+  --color-text: #ffffff;
+  --color-text_muted: #94a3b8;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-stats: 'Poppins', sans-serif;
+  --font-mono: 'Poppins', sans-serif;
+}`;
+        designMd = `# Bento Execution Pipeline
+Modular architectural stages, status cards, and technical telemetry metrics formatted in Poppins.`;
+      } else if (bestTemplate.meta.id === 'ui-telemetry-inverted') {
+        tokensCss = `/* Inverted UI Telemetry Tokens */
+:root {
+  --color-background: #07090e;
+  --color-surface: #0f131c;
+  --color-surface_raised: #161b26;
+  --color-primary: #ff4d4d;
+  --color-accent: #00f0ff;
+  --color-text: #ffffff;
+  --color-text_muted: #94a3b8;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-stats: 'Poppins', sans-serif;
+  --font-mono: 'Poppins', sans-serif;
+}`;
+        designMd = `# Inverted UI Telemetry
+High-density visual interface on top, large display typography below, telemetry values in Poppins.`;
+      }
+    }
 
     const templateGroundedContext = this.templateRegistry.formatGroundedContext(input.prompt);
 
     const composed = this.promptComposer.compose({
       persistentMemory: activeMemory,
-      projectInstructions: `Strict 3:4 Canvas Dimensions: ${width}x${height}`,
+      projectInstructions: `Strict ${activeRatioState.ratio} Canvas Dimensions: ${width}x${height} (${orientation} orientation)`,
       designMd,
       tokensCss,
       templateGroundedContext,
       skill,
-      userPrompt: posterPrompt
+      userPrompt: posterPrompt,
+      geometryContext: {
+        ratio: activeRatioState.ratio,
+        width,
+        height,
+        orientation
+      }
     });
 
-    const llmResponse = await this.providerManager.generateText({
+    const llmResponse = await this.generateTextViaProvider({
       model: 'gemini-3.5-flash-lite',
       systemInstruction: composed.systemInstruction,
-      prompt: composed.userMessage
+      prompt: composed.userMessage,
+      signal: input.signal
     });
 
     let files = this.extractCodeFiles(llmResponse.text);
@@ -324,10 +564,11 @@ Output the COMPLETE \`\`\`css:styles.css\`\`\` stylesheet now for the 1080x1440 
 Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hidden; with full graphic design, typography, and styling.`;
 
       try {
-        const corrResponse = await this.providerManager.generateText({
+        const corrResponse = await this.generateTextViaProvider({
           model: 'gemini-3.5-flash-lite',
           systemInstruction: 'You are an expert poster designer. Output complete, production-grade styles.css for a 3:4 poster.',
-          prompt: correctionPrompt
+          prompt: correctionPrompt,
+          signal: input.signal
         });
         const corrFiles = this.extractCodeFiles(corrResponse.text);
         if (corrFiles['styles.css']) {
@@ -354,10 +595,10 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
       this.workspaceManager.writeFile(input.projectId, 'index.html', htmlContent);
     }
 
-    // Dynamic Asset Resolution & Local Caching (honoring imageIntent)
+    // Dynamic Asset Resolution & Local Caching (honoring imageIntent and canvas geometry)
     let stockProvidersUsed: string[] = [];
     if (this.assetManager && htmlContent && study.imageIntent !== 'image_not_wanted') {
-      const assetRes = await this.resolveDynamicAssets(input.projectId, projectRoot, htmlContent);
+      const assetRes = await this.resolveDynamicAssets(input.projectId, projectRoot, htmlContent, activeRatioState);
       if (assetRes.html !== htmlContent) {
         htmlContent = assetRes.html;
         this.workspaceManager.writeFile(input.projectId, 'index.html', htmlContent);
@@ -417,7 +658,7 @@ Ensure .poster-artboard has width: ${width}px; height: ${height}px; overflow: hi
         : '';
 
       const slopPrompt = `POSTER RE-AUTHORING REQUEST:
-You are correcting and refining the 1080x1440 graphic poster for the user's prompt:
+You are correcting and refining the ${width}x${height} (${activeRatioState.ratio}) graphic poster for the user's prompt:
 "${input.prompt}"
 
 CRITICAL SUBJECT CONSTRAINT:
@@ -495,7 +736,7 @@ FIX INSTRUCTIONS:
         );
         this.workspaceManager.writeFile(input.projectId, 'index.html', htmlContent);
         if (this.assetManager) {
-          const assetRes = await this.resolveDynamicAssets(input.projectId, projectRoot, htmlContent);
+          const assetRes = await this.resolveDynamicAssets(input.projectId, projectRoot, htmlContent, activeRatioState);
           if (assetRes.html !== htmlContent) {
             htmlContent = assetRes.html;
             this.workspaceManager.writeFile(input.projectId, 'index.html', htmlContent);
@@ -505,7 +746,7 @@ FIX INSTRUCTIONS:
     }
 
     // Directional Dark Scrim Safety Net: text position == dark effect position
-    const scrimApplied = this.ensureDirectionalScrim(htmlContent, cssContent);
+    const scrimApplied = this.ensureDirectionalScrim(htmlContent, cssContent, activeRatioState.ratio);
     if (scrimApplied.html !== htmlContent || scrimApplied.css !== cssContent) {
       htmlContent = scrimApplied.html;
       cssContent = scrimApplied.css;
@@ -548,17 +789,24 @@ FIX INSTRUCTIONS:
       allFiles: this.workspaceManager.listFiles(input.projectId).map((f) => f.path),
       entryHtmlFile: 'index.html',
       previewUrl: `/projects/${input.projectId}/index.html`,
+      ratioState: activeRatioState,
       diagnostics: {
         model: llmResponse.model,
         accountId: llmResponse.accountId,
         durationMs: Date.now() - startTime,
         fallbackOccurred: false,
-        stockProvidersUsed
+        stockProvidersUsed,
+        provider: llmResponse.provider || 'gemini',
+        toolsInvoked,
+        operation: 'generate'
       }
     };
   }
 
   async refine(input: RefinementInput): Promise<GenerationResult> {
+    if (input.signal?.aborted) {
+      throw new DOMException('Operation aborted', 'AbortError');
+    }
     const startTime = Date.now();
     const runId = `refine_poster_${randomUUID().replaceAll('-', '').slice(0, 8)}`;
     const project = this.workspaceManager.getProject(input.projectId);
@@ -584,10 +832,11 @@ FIX INSTRUCTIONS:
       refinementSectionId: input.targetElementId
     });
 
-    const llmResponse = await this.providerManager.generateText({
+    const llmResponse = await this.generateTextViaProvider({
       model: 'gemini-3.5-flash-lite',
       systemInstruction: composed.systemInstruction,
-      prompt: composed.userMessage
+      prompt: composed.userMessage,
+      signal: input.signal
     });
 
     const files = this.extractCodeFiles(llmResponse.text);
@@ -652,12 +901,16 @@ FIX INSTRUCTIONS:
       allFiles: this.workspaceManager.listFiles(input.projectId).map((f) => f.path),
       entryHtmlFile: 'index.html',
       previewUrl: `/projects/${input.projectId}/index.html`,
+      ratioState: this.ratioCapability.getProjectRatio(input.projectId),
       diagnostics: {
         model: llmResponse.model,
         accountId: llmResponse.accountId,
         durationMs: Date.now() - startTime,
         fallbackOccurred: false,
-        stockProvidersUsed: refineStockProvidersUsed
+        stockProvidersUsed: refineStockProvidersUsed,
+        provider: llmResponse.provider || 'gemini',
+        toolsInvoked: [],
+        operation: 'refine'
       }
     };
   }
@@ -809,7 +1062,8 @@ FIX INSTRUCTIONS:
   private async resolveDynamicAssets(
     projectId: string,
     projectRoot: string,
-    html: string
+    html: string,
+    activeRatioState?: RatioState
   ): Promise<{ html: string; usedProviders: string[] }> {
     let resolvedHtml = html;
     const usedProviders: string[] = [];
@@ -825,19 +1079,34 @@ FIX INSTRUCTIONS:
     const assetsDir = path.join(projectRoot, 'assets');
     fs.mkdirSync(assetsDir, { recursive: true });
 
+    const activeRatio = activeRatioState?.ratio || '3:4';
+    const canvasOrientation = getOrientationForRatio(activeRatio);
+    let defaultHeroOrientation: 'landscape' | 'portrait' | 'square' = 'portrait';
+    if (canvasOrientation === 'landscape') {
+      defaultHeroOrientation = 'landscape';
+    } else if (canvasOrientation === 'square') {
+      defaultHeroOrientation = 'square';
+    } else {
+      defaultHeroOrientation = 'portrait';
+    }
+
     for (const match of matches) {
       const fullImgTag = match[0];
       const preAttrs = match[1] || '';
       const rawQuery = match[2].trim();
       const postAttrs = match[3] || '';
 
-      // Determine orientation from classes or query string params
-      let orientation: 'landscape' | 'portrait' | 'square' = 'landscape';
+      // Determine orientation from classes or canvas geometry
+      let orientation: 'landscape' | 'portrait' | 'square' = defaultHeroOrientation;
       const combinedAttrs = `${preAttrs} ${postAttrs}`.toLowerCase();
-      if (combinedAttrs.includes('poster-bleed-image') || combinedAttrs.includes('img-vertical') || combinedAttrs.includes('portrait')) {
-        orientation = 'portrait';
+      if (combinedAttrs.includes('img-horizontal') || combinedAttrs.includes('landscape')) {
+        orientation = 'landscape';
       } else if (combinedAttrs.includes('img-square') || combinedAttrs.includes('square')) {
         orientation = 'square';
+      } else if (combinedAttrs.includes('img-vertical') || combinedAttrs.includes('portrait')) {
+        orientation = 'portrait';
+      } else if (combinedAttrs.includes('poster-bleed-image')) {
+        orientation = defaultHeroOrientation;
       }
 
       try {
@@ -1009,7 +1278,7 @@ FIX INSTRUCTIONS:
    * Directional Dark Scrim Safety Net
    * Enforces the contract: text position == dark effect position
    */
-  public ensureDirectionalScrim(html: string, css: string): { html: string; css: string } {
+  public ensureDirectionalScrim(html: string, css: string, activeRatio?: SupportedRatio): { html: string; css: string } {
     const hasBleedImage = /class=["'][^"']*(?:poster-bleed-image|hero-bleed|bg-image)[^"']*["']/i.test(html) ||
       /<img\b[^>]*\bclass=["'][^"']*poster-bleed-image[^"']*["']/i.test(html) ||
       (/hero-image-container/i.test(html) && /<img\b/i.test(html));
@@ -1020,14 +1289,27 @@ FIX INSTRUCTIONS:
     let newHtml = html;
     let newCss = css;
 
-    // Detect text placement: bottom, top, or dual
+    const isLandscape = activeRatio === '16:9' || activeRatio === '4:3';
+    const isSquare = activeRatio === '1:1';
+
+    // Detect text placement: bottom, top, dual, left, right, radial
     const hasTopHeader = /<header\b/i.test(html) || /class=["'][^"']*(?:top-section|poster-header|brand-tag|eyebrow|top-bar|model-code)\b[^"']*["']/i.test(html);
     const hasBottomText = /class=["'][^"']*(?:content-stack|hero-content|bottom|specs|spec-strip|specs-grid|specs-container)\b[^"']*["']/i.test(html) ||
       /margin-top:\s*auto/i.test(css) ||
       /justify-content:\s*(?:space-between|flex-end)/i.test(css);
+    const hasLeftPlacement = /class=["'][^"']*(?:left-column|split-left|left-aligned|hero-left)\b[^"']*["']/i.test(html) ||
+      (/text-align:\s*left/i.test(css) && /width:\s*(?:40%|50%|60%)/i.test(css));
+    const hasRightPlacement = /class=["'][^"']*(?:right-column|split-right|right-aligned|hero-right)\b[^"']*["']/i.test(html);
+    const hasCornerPlacement = /class=["'][^"']*(?:corner|top-left-hero)\b[^"']*["']/i.test(html);
 
     let scrimClass = 'scrim-bottom';
-    if (hasTopHeader && hasBottomText) {
+    if ((isLandscape || isSquare) && hasLeftPlacement) {
+      scrimClass = 'scrim-left';
+    } else if ((isLandscape || isSquare) && hasRightPlacement) {
+      scrimClass = 'scrim-right';
+    } else if (hasCornerPlacement) {
+      scrimClass = 'scrim-radial';
+    } else if (hasTopHeader && hasBottomText) {
       scrimClass = 'scrim-dual';
     } else if (hasTopHeader && !hasBottomText) {
       scrimClass = 'scrim-top';
@@ -1072,6 +1354,15 @@ FIX INSTRUCTIONS:
 }
 .scrim-dual {
   background: linear-gradient(180deg, rgba(5, 7, 10, 0.85) 0%, rgba(5, 7, 10, 0.15) 30%, rgba(5, 7, 10, 0.7) 65%, rgba(5, 7, 10, 0.98) 100%);
+}
+.scrim-left {
+  background: linear-gradient(90deg, rgba(5, 7, 10, 0.95) 0%, rgba(5, 7, 10, 0.7) 40%, rgba(5, 7, 10, 0.1) 75%, transparent 100%);
+}
+.scrim-right {
+  background: linear-gradient(270deg, rgba(5, 7, 10, 0.95) 0%, rgba(5, 7, 10, 0.7) 40%, rgba(5, 7, 10, 0.1) 75%, transparent 100%);
+}
+.scrim-radial {
+  background: radial-gradient(ellipse at top left, rgba(5, 7, 10, 0.95) 0%, rgba(5, 7, 10, 0.7) 40%, rgba(5, 7, 10, 0) 80%);
 }
 `;
     }

@@ -1,8 +1,6 @@
 import path from 'node:path';
 import fs from 'node:fs';
-import { getEngineConfig } from '../../core/config/env.ts';
-import { StandaloneDesignEngine } from '../../core/engine.ts';
-import type { TargetType } from '../../core/contracts/engine.ts';
+import { getEngineConfig, StandaloneDesignEngine, type TargetType } from '../../core/index.ts';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -35,6 +33,8 @@ Commands:
   const engine = new StandaloneDesignEngine({
     dataDir,
     previewPort: parseInt(process.env.D8_PORT || String(envConfig.port), 10),
+    enablePreviewServer: command === 'preview',
+    autoExportPng: true,
     geminiKeys: envConfig.geminiKeys,
     pexelsKeys: envConfig.pexelsKeys,
     pixabayKeys: envConfig.pixabayKeys,

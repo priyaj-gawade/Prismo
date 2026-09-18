@@ -1,18 +1,19 @@
-import type { AllowedGeminiModel, ModelMessage, ModelGenerateOptions, ModelGenerateResult, AccountHealthStats } from '../contracts/models.ts';
+import type {
+  AllowedGeminiModel,
+  ModelMessage,
+  ModelGenerateOptions,
+  ModelGenerateResult,
+  AccountHealthStats,
+  ModelProvider,
+  ProviderExecutionDiagnostics
+} from '../contracts/models.ts';
 import { GeminiAccountPool } from './pool.ts';
 import { GeminiApiClient } from './gemini.ts';
 import { validateModelId } from './allowlist.ts';
 
-export interface ProviderExecutionDiagnostics {
-  model: AllowedGeminiModel;
-  accountId: string;
-  durationMs: number;
-  fallbackOccurred: boolean;
-  attemptsCount: number;
-  attemptedAccounts: string[];
-}
+export type { ProviderExecutionDiagnostics };
 
-export class GeminiProviderManager {
+export class GeminiProviderManager implements ModelProvider {
   private pool: GeminiAccountPool;
   private client: GeminiApiClient;
   private defaultModel: AllowedGeminiModel = 'gemini-3.5-flash-lite';
@@ -115,13 +116,18 @@ export class GeminiProviderManager {
     model?: string;
     systemInstruction?: string;
     prompt: string;
+    signal?: AbortSignal;
   }): Promise<{ text: string; model: string; accountId: string }> {
+    if (options.signal?.aborted) {
+      throw new DOMException('Operation aborted', 'AbortError');
+    }
     const messages: ModelMessage[] = [
       { role: 'user', content: options.prompt }
     ];
     const genOptions: ModelGenerateOptions = {
       model: options.model as any,
-      systemInstruction: options.systemInstruction
+      systemInstruction: options.systemInstruction,
+      signal: options.signal
     };
     const { result, diagnostics } = await this.generate(messages, genOptions);
     return {

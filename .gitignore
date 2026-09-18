@@ -16,15 +16,12 @@ yarn-error.log*
 # User-Requested Ignored Directories
 docs/
 docs
-tests/
-test/
-test
-tests
 
 # Data, Projects, & Exports
 d8.7-data/
 d8.7-data
 d8.7-smoke-*
+d8.7-test-*
 exports/
 projects/
 

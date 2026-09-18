@@ -30,12 +30,13 @@ export interface LimoDesignEngineResponse {
   previewUrl: string;
   exportPath?: string;
   diagnostics: {
-    provider: 'gemini';
+    provider: string;
     model: string;
     accountId: string;
     durationMs: number;
     fallbackOccurred: boolean;
     stockProvidersUsed: string[];
+    toolsInvoked?: string[];
   };
   error?: string;
 }

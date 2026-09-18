@@ -1,9 +1,9 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import { getEngineConfig } from '../../core/config/env.ts';
-import { StandaloneDesignEngine } from '../../core/engine.ts';
-import type { TargetType } from '../../core/contracts/engine.ts';
+import { getEngineConfig } from '../../core/index.ts';
+import { StandaloneDesignEngine } from '../../core/index.ts';
+import type { TargetType } from '../../core/index.ts';
 
 export async function startServer(port: number = 5180): Promise<{ server: http.Server; engine: StandaloneDesignEngine; port: number }> {
   const envConfig = getEngineConfig();
@@ -14,6 +14,8 @@ export async function startServer(port: number = 5180): Promise<{ server: http.S
   const engine = new StandaloneDesignEngine({
     dataDir,
     previewPort: port,
+    enablePreviewServer: true,
+    autoExportPng: true,
     geminiKeys: envConfig.geminiKeys,
     pexelsKeys: envConfig.pexelsKeys,
     pixabayKeys: envConfig.pixabayKeys,

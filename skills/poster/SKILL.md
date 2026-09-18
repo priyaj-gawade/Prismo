@@ -1,12 +1,12 @@
 ---
 name: poster
 targetType: poster
-description: Strictly 3:4 visual poster artboard (1080x1440px) adhering to D8.7 Poster Visual Quality Policy, Micro-UI & Fake-Chrome Elimination, fluid composition grammar, and Hallmark disciplines.
+description: High-craft multi-ratio visual composition and poster artboard (supporting canonical 3:4, 9:16, 16:9, 1:1, 4:3 geometries) adhering to D8.7 Poster Visual Quality Policy, Micro-UI & Fake-Chrome Elimination, fluid composition grammar, and Hallmark disciplines.
 ---
 
-# Strictly 3:4 Poster & Visual Composition Skill
+# Multi-Ratio Poster & Visual Composition Skill
 
-Design a standalone, high-craft graphic poster rendered as a fixed 3:4 visual artboard (1080px × 1440px).
+Design a standalone, high-craft graphic visual composition rendered for the active canonical geometry (3:4, 9:16, 16:9, 1:1, or 4:3).
 
 ==================================================
 D8.7 — FINAL POSTER VISUAL QUALITY POLICY
@@ -22,11 +22,11 @@ VISUAL QUALITY HAS ABSOLUTE PRIORITY OVER INFORMATION DENSITY.
 GENERATE A DESIGNER'S COMPOSITION, NOT A COLLECTION OF COMPONENTS.
 
 ==================================================
-1. HARD MICRO-TEXT POLICY (MINIMUM 22PX)
+1. ADAPTIVE READABILITY POLICY
 ==================================================
 Posters are not UI dashboards. Do not use tiny text to create the impression of sophistication.
 
-DEFAULT MINIMUM DESIGNED TEXT SIZE: 22px or larger at the 1080px-wide canonical artboard.
+Primary content must be distance-readable; secondary text must remain readable; microtext is allowed only for justified credits/legal/source information.
 
 Preferred typographic scales:
 - Headline / Display Title: 72px–120px+
@@ -42,13 +42,14 @@ STRICTLY FORBIDDEN:
 - Do NOT use tiny text for fake technical labels, fake status indicators, fake metadata, or decorative terminology.
 
 ==================================================
-2. HARD PILL / CHIP POLICY (DEFAULT 0 PILLS)
+2. NO DECORATIVE PILLS / CHIPS
 ==================================================
 Pills and chips are UI components. They are NOT default poster decoration.
 
-DEFAULT: 0 PILLS.
-If a pill is genuinely required by the content:
-- Maximum 1 pill allowed
+NO DECORATIVE PILLS/CHIPS: Zero decorative pills/chips.
+A pill or chip should only exist when it is genuinely semantic content, never as visual filler.
+
+If a pill is genuinely semantic:
 - Must be large enough to read effortlessly (text >= 20px)
 - Must be visually subordinate and semantically meaningful
 - NEVER used merely as decoration
@@ -247,9 +248,15 @@ Deliberately vary:
 - **Negative Reference B (Generic Mind-Map Output)**: `TERM 04` with green dot, `ACTIVE LEADER` pill, `NODE_01`/`NODE_02` repeated boxed cards with connecting lines, tiny status text.
 
 ==================================================
-15. POSTER ARTBOARD & SPECIFICATION
+15. POSTER ARTBOARD & GEOMETRY SPECIFICATION
 ==================================================
-- Strict 1080px × 1440px (3:4 ratio).
+- Strict canonical dimensions for the active project ratio:
+  - 3:4: 1080px × 1440px (Portrait)
+  - 9:16: 1080px × 1920px (Portrait)
+  - 16:9: 1920px × 1080px (Landscape)
+  - 1:1: 1080px × 1080px (Square)
+  - 4:3: 1440px × 1080px (Landscape)
+- GEOMETRY ADAPTATION: Geometry-specific guidance provides optional spatial considerations and must not prescribe a fixed composition, layout skeleton, alignment, or ingredient set.
 - Required root element: `<main class="poster-artboard" data-od-id="poster-root">`.
 - Stable `data-od-id` attributes on all meaningful editable semantic elements:
   - `data-od-id="poster-root"`

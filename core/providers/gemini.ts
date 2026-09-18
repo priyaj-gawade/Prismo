@@ -1,4 +1,10 @@
-import type { AllowedGeminiModel, ModelMessage, ModelGenerateOptions, ModelGenerateResult } from '../contracts/models.ts';
+import type {
+  AllowedGeminiModel,
+  ModelMessage,
+  ModelGenerateOptions,
+  ModelGenerateResult,
+  FunctionCallPart
+} from '../contracts/models.ts';
 import { validateModelId } from './allowlist.ts';
 
 export class GeminiApiClient {
@@ -15,10 +21,34 @@ export class GeminiApiClient {
     // Transform messages to Gemini format
     const contents = messages
       .filter((m) => m.role !== 'system')
-      .map((m) => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
-      }));
+      .map((m) => {
+        const role = m.role === 'assistant' ? 'model' : (m.role === 'function' ? 'user' : 'user');
+
+        if (m.parts && m.parts.length > 0) {
+          const mappedParts = m.parts.map((p) => {
+            if (p.functionCall) {
+              const { name, args, thought_signature, thought, ...rest } = p.functionCall as Record<string, unknown>;
+              return {
+                functionCall: { name, args },
+                ...(thought_signature ? { thought_signature } : {}),
+                ...(thought ? { thought } : {}),
+                ...(p.thought_signature ? { thought_signature: p.thought_signature } : {}),
+                ...rest
+              };
+            }
+            if (p.functionResponse) {
+              return { functionResponse: p.functionResponse };
+            }
+            return { text: p.text || '' };
+          });
+          return { role, parts: mappedParts };
+        }
+
+        return {
+          role,
+          parts: [{ text: m.content || '' }]
+        };
+      });
 
     // Extract system instructions if any
     const systemInstructionContent = options.systemInstruction ||
@@ -34,6 +64,10 @@ export class GeminiApiClient {
       }
     };
 
+    if (options.tools && options.tools.length > 0) {
+      requestBody.tools = options.tools;
+    }
+
     if (systemInstructionContent) {
       requestBody.systemInstruction = {
         parts: [{ text: systemInstructionContent }]
@@ -47,7 +81,8 @@ export class GeminiApiClient {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
+      signal: options.signal
     });
 
     if (!response.ok) {
@@ -59,7 +94,12 @@ export class GeminiApiClient {
 
     const data = await response.json() as {
       candidates?: Array<{
-        content?: { parts?: Array<{ text?: string }> };
+        content?: {
+          parts?: Array<{
+            text?: string;
+            functionCall?: { name: string; args?: Record<string, unknown> };
+          }>;
+        };
         finishReason?: string;
       }>;
       usageMetadata?: {
@@ -72,10 +112,26 @@ export class GeminiApiClient {
     const candidate = data.candidates?.[0];
     const text = candidate?.content?.parts?.map((p) => p.text || '').join('') || '';
 
+    const functionCalls: FunctionCallPart[] = [];
+    if (candidate?.content?.parts) {
+      for (const part of candidate.content.parts) {
+        if (part.functionCall) {
+          const rawPart = part as Record<string, unknown>;
+          functionCalls.push({
+            name: part.functionCall.name,
+            args: part.functionCall.args || {},
+            ...(rawPart.thought_signature ? { thought_signature: rawPart.thought_signature as string } : {}),
+            ...(rawPart.thought ? { thought: rawPart.thought } : {})
+          });
+        }
+      }
+    }
+
     return {
       text,
       model: validatedModel,
       accountId: '', // populated by caller
+      functionCalls: functionCalls.length > 0 ? functionCalls : undefined,
       finishReason: candidate?.finishReason,
       usage: {
         promptTokens: data.usageMetadata?.promptTokenCount || 0,

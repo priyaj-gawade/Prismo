@@ -146,6 +146,18 @@ export class FontRegistry {
 
       // 3. Geometric Display (Refined constructivist/modernist—ORBITRON EXCLUDED)
       {
+        family: 'Poppins',
+        source: 'google-fonts',
+        license: 'OFL',
+        roles: ['display', 'body', 'utility'],
+        styles: ['400', '500', '600', '700', '800'],
+        availability: 'available',
+        loadMethod: 'link',
+        fallbackChain: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        googleFontQuery: 'family=Poppins:wght@400;500;600;700;800',
+        category: 'geometric-display'
+      },
+      {
         family: 'Space Grotesk',
         source: 'google-fonts',
         license: 'OFL',
@@ -280,25 +292,16 @@ export class FontRegistry {
     return `https://fonts.googleapis.com/css2?${queries.join('&')}&display=swap`;
   }
 
-  private static defaultInstance: FontRegistry | null = null;
-
-  private static getInstance(): FontRegistry {
-    if (!FontRegistry.defaultInstance) {
-      FontRegistry.defaultInstance = new FontRegistry();
-    }
-    return FontRegistry.defaultInstance;
-  }
-
   public static getFont(family: string): FontDefinition | undefined {
-    return FontRegistry.getInstance().getFont(family);
+    return new FontRegistry().getFont(family);
   }
 
   public static getAllFonts(): FontDefinition[] {
-    return FontRegistry.getInstance().listApprovedFonts();
+    return new FontRegistry().listApprovedFonts();
   }
 
   public static isApproved(family: string): boolean {
-    return FontRegistry.getInstance().isApproved(family);
+    return new FontRegistry().isApproved(family);
   }
 }
 

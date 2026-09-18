@@ -99,7 +99,13 @@ export class WorkspaceManager {
       createdAt: now,
       updatedAt: now,
       instructions,
-      version: 1
+      version: 1,
+      ratioState: {
+        ratio: '3:4',
+        dimensions: { width: 1080, height: 1440 },
+        origin: 'default',
+        locked: false
+      }
     };
 
     fs.writeFileSync(path.join(rootPath, 'design.json'), JSON.stringify(meta, null, 2), 'utf8');

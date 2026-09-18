@@ -316,6 +316,8 @@
     const reloadFrameBtn = document.getElementById('reload-frame-btn');
 
     let loadedProjectsList = [];
+    let currentArtboardWidth = 1080;
+    let currentArtboardHeight = 1440;
 
     function log(msg) {
       const ts = new Date().toLocaleTimeString();
@@ -346,7 +348,8 @@
         projects.forEach((p) => {
           const opt = document.createElement('option');
           opt.value = p.id;
-          opt.textContent = `${p.name} [v${p.version || 1}]`;
+          const ratio = p.ratioState?.ratio || '3:4';
+          opt.textContent = `${p.name} [${ratio}] [v${p.version || 1}]`;
           projectSelect.appendChild(opt);
         });
         selectProject(projects[0].id);
@@ -357,10 +360,19 @@
 
     function selectProject(id) {
       if (!id) return;
-      previewUrlLabel.textContent = `Live [3:4 Poster Artboard]: /projects/${id}/index.html`;
+      const p = loadedProjectsList.find((x) => x.id === id);
+      const ratio = p?.ratioState?.ratio || '3:4';
+      const width = p?.ratioState?.dimensions?.width || 1080;
+      const height = p?.ratioState?.dimensions?.height || 1440;
+      currentArtboardWidth = width;
+      currentArtboardHeight = height;
+
+      previewUrlLabel.textContent = `Live [${ratio} ${width}x${height}]: /projects/${id}/index.html`;
       previewFrame.src = `/projects/${id}/index.html?t=${Date.now()}`;
+      previewFrame.style.width = width + 'px';
+      previewFrame.style.height = height + 'px';
       rescalePreview();
-      log(`Selected project: ${id}`);
+      log(`Selected project: ${id} (${ratio} ${width}x${height})`);
     }
 
     function rescalePreview() {
@@ -368,11 +380,13 @@
       if (!scaler) return;
       const cw = previewContainer.clientWidth - 32;
       const ch = previewContainer.clientHeight - 32;
+      const w = currentArtboardWidth || 1080;
+      const h = currentArtboardHeight || 1440;
       if (cw > 0 && ch > 0) {
-        const scale = Math.min(cw / 1080, ch / 1440, 0.85);
+        const scale = Math.min(cw / w, ch / h, 0.88);
         scaler.style.transform = `scale(${scale})`;
-        scaler.style.width = '1080px';
-        scaler.style.height = '1440px';
+        scaler.style.width = w + 'px';
+        scaler.style.height = h + 'px';
       }
     }
 
