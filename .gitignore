@@ -16,6 +16,8 @@ yarn-error.log*
 # User-Requested Ignored Directories
 docs/
 docs
+tests/
+tests
 
 # Data, Projects, & Exports
 d8.7-data/
